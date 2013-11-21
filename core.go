@@ -11,60 +11,28 @@ import (
 	. "github.com/tHinqa/outside/types"
 )
 
+type Quantum byte //Q8
+
 const MaxTextExtent = 2053
 
 type (
-	fix int
+	fix uintptr
 
-	AffineMatrix         fix
-	AlignType            fix
-	Char                 byte
-	ClipPathUnits        fix
-	DecorationType       fix
-	ElementReference     fix
-	EndianType           fix
-	Enum                 int
-	ErrorInfo            fix
-	ExceptionInfo        fix
-	ExceptionInfo2       fix
-	ExceptionType        fix
-	FILE                 fix
-	FillRule             fix
-	FilterTypes          fix
-	FrameInfo            fix
-	GradientInfo         fix
-	GravityType          fix
-	HistogramColorPacket fix
-	ImageAttribute       fix
-	ImageInfo            fix
-	ImageType            fix
-	InterlaceType        fix
-	LineCap              fix
-	LineJoin             fix
-	MagickBooleanType    fix
-	MetricType           fix
-	OrientationType      fix
-	PixelPacket          fix
-	Quantum              fix
-	RectangleInfo        fix
-	RenderingIntent      fix
-	ResolutionType       fix
-	SegmentInfo          fix
-	SemaphoreInfo        fix
-	Size                 fix
-	SSize                fix
-	StorageType          fix
-	StretchType          fix
-	StyleType            fix
-	TimerInfo            fix
-	TypeMetric           fix
-	Void                 fix
+	FILE fix
+
+	Char              byte
+	Enum              int
+	MagickBooleanType uint
+	Size              uint // TODO(t):size_t on gcc vs msc 32 vs 64
+	SSize             int  // TODO(t):ssize_t on gcc vs msc 32 vs 64
 )
 
 // Opaque types
 type (
-	Ascii85Info struct{}
-	BlobInfo    struct{}
+	Ascii85Info   struct{}
+	BlobInfo      struct{}
+	SemaphoreInfo struct{}
+	Void          struct{}
 )
 
 func init() {
@@ -998,7 +966,6 @@ type Image struct {
 	List            *Image
 	Signature_      Size
 }
-
 type ChannelType Enum
 
 const (
@@ -1019,14 +986,12 @@ const (
 type PrimaryInfo struct {
 	X, Y, Z float64
 }
-
 type ChromaticityInfo struct {
 	RedPrimary,
 	GreenPrimary,
 	BluePrimary,
 	WhitePoint PrimaryInfo
 }
-
 type ClassType Enum
 
 const (
@@ -1136,13 +1101,11 @@ const (
 )
 
 type ConfirmAccessHandler func(mode ConfirmAccessMode, path string, exception *ExceptionInfo) bool
-
 type DifferenceImageOptions struct {
 	Channel        ChannelType
 	HighlightStyle HighlightStyle
 	HighlightColor PixelPacket
 }
-
 type HighlightStyle Enum
 
 const (
@@ -1156,7 +1119,6 @@ const (
 type DifferenceStatistics struct {
 	Red, Green, Blue, Opacity, Combined float64
 }
-
 type DisposeType Enum
 
 const (
@@ -1209,6 +1171,595 @@ type DrawInfo struct {
 	Debug            MagickBooleanType // uint
 	ElementReference ElementReference
 	Signature        Size
+}
+type AffineMatrix struct {
+	Sx, Rx, Ry, Sy, Tx, Ty float64
+}
+type AlignType Enum
+
+const (
+	UndefinedAlign AlignType = iota
+	LeftAlign
+	CenterAlign
+	RightAlign
+)
+
+type ClipPathUnits Enum
+
+const (
+	UserSpace ClipPathUnits = iota
+	UserSpaceOnUse
+	ObjectBoundingBox
+)
+
+type DecorationType Enum
+
+const (
+	NoDecoration DecorationType = iota
+	UnderlineDecoration
+	OverlineDecoration
+	LineThroughDecoration
+)
+
+type ElementReference struct {
+	Id        *VString
+	Type      ReferenceType
+	Gradient  GradientInfo
+	Signature Size
+	Previous  *ElementReference
+	Next      *ElementReference
+}
+
+type EndianType Enum
+
+const (
+	UndefinedEndian EndianType = iota
+	LSBEndian
+	MSBEndian
+	NativeEndian
+)
+
+type ErrorInfo struct {
+	MeanErrorPerPixel,
+	NormalizedMeanError,
+	NormalizedMaximumError float64
+}
+type ExceptionInfo struct {
+	Severity    ExceptionType
+	Reason      *OVString
+	Description *OVString
+	ErrorNumber int
+	Module      *OVString
+	Function    *OVString
+	Line        Size
+	Signature   Size
+}
+type ExceptionInfo2 struct {
+	Severity    ExceptionType
+	Reason      *CString
+	Description *CString
+	ErrorNumber int
+	Module      *CString
+	Function    *CString
+	Line        Size
+	Signature   Size
+}
+type ExceptionType Enum
+
+const (
+	undefinedExceptionBase ExceptionType = iota
+	exceptionBase
+	resourceBase
+	resourceLimitBase = resourceBase
+)
+const (
+	UndefinedException ExceptionType = iota * 5
+	typeBase
+	optionBase
+	delegateBase
+	missingDelegateBase
+	corruptImageBase
+	fileOpenBase
+	blobBase
+	streamBase
+	cacheBase
+	coderBase
+	moduleBase
+	drawBase
+	imageBase
+	temporaryFileBase
+	transformBase
+	xServerBase
+	monitorBase
+	registryBase
+	configureBase
+	annotateBase  = typeBase
+	renderBase    = drawBase
+	wandBase      = imageBase + 2
+	x11Base       = xServerBase + 1
+	userBase      = xServerBase + 2
+	localeBase    = monitorBase + 1
+	deprecateBase = monitorBase + 2
+)
+const (
+	EventException ExceptionType = 100
+
+	ExceptionEvent       = EventException + exceptionBase
+	ResourceEvent        = EventException + resourceBase
+	ResourceLimitEvent   = EventException + resourceLimitBase
+	TypeEvent            = EventException + typeBase
+	AnnotateEvent        = EventException + annotateBase
+	OptionEvent          = EventException + optionBase
+	DelegateEvent        = EventException + delegateBase
+	MissingDelegateEvent = EventException + missingDelegateBase
+	CorruptImageEvent    = EventException + corruptImageBase
+	FileOpenEvent        = EventException + fileOpenBase
+	BlobEvent            = EventException + blobBase
+	StreamEvent          = EventException + streamBase
+	CacheEvent           = EventException + cacheBase
+	CoderEvent           = EventException + coderBase
+	ModuleEvent          = EventException + moduleBase
+	DrawEvent            = EventException + drawBase
+	RenderEvent          = EventException + renderBase
+	ImageEvent           = EventException + imageBase
+	WandEvent            = EventException + wandBase
+	TemporaryFileEvent   = EventException + temporaryFileBase
+	TransformEvent       = EventException + transformBase
+	XServerEvent         = EventException + xServerBase
+	X11Event             = EventException + x11Base
+	UserEvent            = EventException + userBase
+	MonitorEvent         = EventException + monitorBase
+	LocaleEvent          = EventException + localeBase
+	DeprecateEvent       = EventException + deprecateBase
+	RegistryEvent        = EventException + registryBase
+	ConfigureEvent       = EventException + configureBase
+
+	WarningException ExceptionType = 300
+
+	ExceptionWarning       = WarningException + exceptionBase
+	ResourceWarning        = WarningException + resourceBase
+	ResourceLimitWarning   = WarningException + resourceLimitBase
+	TypeWarning            = WarningException + typeBase
+	AnnotateWarning        = WarningException + annotateBase
+	OptionWarning          = WarningException + optionBase
+	DelegateWarning        = WarningException + delegateBase
+	MissingDelegateWarning = WarningException + missingDelegateBase
+	CorruptImageWarning    = WarningException + corruptImageBase
+	FileOpenWarning        = WarningException + fileOpenBase
+	BlobWarning            = WarningException + blobBase
+	StreamWarning          = WarningException + streamBase
+	CacheWarning           = WarningException + cacheBase
+	CoderWarning           = WarningException + coderBase
+	ModuleWarning          = WarningException + moduleBase
+	DrawWarning            = WarningException + drawBase
+	RenderWarning          = WarningException + renderBase
+	ImageWarning           = WarningException + imageBase
+	WandWarning            = WarningException + wandBase
+	TemporaryFileWarning   = WarningException + temporaryFileBase
+	TransformWarning       = WarningException + transformBase
+	XServerWarning         = WarningException + xServerBase
+	X11Warning             = WarningException + x11Base
+	UserWarning            = WarningException + userBase
+	MonitorWarning         = WarningException + monitorBase
+	LocaleWarning          = WarningException + localeBase
+	DeprecateWarning       = WarningException + deprecateBase
+	RegistryWarning        = WarningException + registryBase
+	ConfigureWarning       = WarningException + configureBase
+
+	ErrorException ExceptionType = 400
+
+	ExceptionError       = ErrorException + exceptionBase
+	ResourceError        = ErrorException + resourceBase
+	ResourceLimitError   = ErrorException + resourceLimitBase
+	TypeError            = ErrorException + typeBase
+	AnnotateError        = ErrorException + annotateBase
+	OptionError          = ErrorException + optionBase
+	DelegateError        = ErrorException + delegateBase
+	MissingDelegateError = ErrorException + missingDelegateBase
+	CorruptImageError    = ErrorException + corruptImageBase
+	FileOpenError        = ErrorException + fileOpenBase
+	BlobError            = ErrorException + blobBase
+	StreamError          = ErrorException + streamBase
+	CacheError           = ErrorException + cacheBase
+	CoderError           = ErrorException + coderBase
+	ModuleError          = ErrorException + moduleBase
+	DrawError            = ErrorException + drawBase
+	RenderError          = ErrorException + renderBase
+	ImageError           = ErrorException + imageBase
+	WandError            = ErrorException + wandBase
+	TemporaryFileError   = ErrorException + temporaryFileBase
+	TransformError       = ErrorException + transformBase
+	XServerError         = ErrorException + xServerBase
+	X11Error             = ErrorException + x11Base
+	UserError            = ErrorException + userBase
+	MonitorError         = ErrorException + monitorBase
+	LocaleError          = ErrorException + localeBase
+	DeprecateError       = ErrorException + deprecateBase
+	RegistryError        = ErrorException + registryBase
+	ConfigureError       = ErrorException + configureBase
+
+	FatalErrorException ExceptionType = 700
+
+	ExceptionFatalError       = FatalErrorException + exceptionBase
+	ResourceFatalError        = FatalErrorException + resourceBase
+	ResourceLimitFatalError   = FatalErrorException + resourceLimitBase
+	TypeFatalError            = FatalErrorException + typeBase
+	AnnotateFatalError        = FatalErrorException + annotateBase
+	OptionFatalError          = FatalErrorException + optionBase
+	DelegateFatalError        = FatalErrorException + delegateBase
+	MissingDelegateFatalError = FatalErrorException + missingDelegateBase
+	CorruptImageFatalError    = FatalErrorException + corruptImageBase
+	FileOpenFatalError        = FatalErrorException + fileOpenBase
+	BlobFatalError            = FatalErrorException + blobBase
+	StreamFatalError          = FatalErrorException + streamBase
+	CacheFatalError           = FatalErrorException + cacheBase
+	CoderFatalError           = FatalErrorException + coderBase
+	ModuleFatalError          = FatalErrorException + moduleBase
+	DrawFatalError            = FatalErrorException + drawBase
+	RenderFatalError          = FatalErrorException + renderBase
+	ImageFatalError           = FatalErrorException + imageBase
+	WandFatalError            = FatalErrorException + wandBase
+	TemporaryFileFatalError   = FatalErrorException + temporaryFileBase
+	TransformFatalError       = FatalErrorException + transformBase
+	XServerFatalError         = FatalErrorException + xServerBase
+	X11FatalError             = FatalErrorException + x11Base
+	UserFatalError            = FatalErrorException + userBase
+	MonitorFatalError         = FatalErrorException + monitorBase
+	LocaleFatalError          = FatalErrorException + localeBase
+	DeprecateFatalError       = FatalErrorException + deprecateBase
+	RegistryFatalError        = FatalErrorException + registryBase
+	ConfigureFatalError       = FatalErrorException + configureBase
+)
+
+type FillRule Enum
+
+const (
+	UndefinedRule FillRule = iota
+	EvenOddRule
+	NonZeroRule
+)
+
+type FilterTypes Enum
+
+const (
+	UndefinedFilter FilterTypes = iota
+	PointFilter
+	BoxFilter
+	TriangleFilter
+	HermiteFilter
+	HanningFilter
+	HammingFilter
+	BlackmanFilter
+	GaussianFilter
+	QuadraticFilter
+	CubicFilter
+	CatromFilter
+	MitchellFilter
+	LanczosFilter
+	BesselFilter
+	SincFilter
+)
+
+type FrameInfo struct {
+	Width, Height                Size
+	X, Y, InnerBevel, OuterBevel SSize
+}
+type GradientInfo struct {
+	Type           GradientType
+	Color          PixelPacket
+	Stop           SegmentInfo
+	Length         Size
+	Spread         SpreadMethod
+	Signature      Size
+	Previous, Next *GradientInfo
+}
+type GradientType Enum
+
+const (
+	UndefinedGradient GradientType = iota
+	LinearGradient
+	RadialGradient
+)
+
+type GravityType Enum
+
+const (
+	UndefinedGravity GravityType = iota
+	NorthWestGravity
+	NorthGravity
+	NorthEastGravity
+	WestGravity
+	CenterGravity
+	EastGravity
+	SouthWestGravity
+	SouthGravity
+	SouthEastGravity
+	StaticGravity
+)
+
+type HistogramColorPacket struct {
+	Pixel PixelPacket
+	Count Size
+}
+type ImageAttribute struct {
+	Key      *VString
+	Value    *VString
+	Length   Size
+	Previous *ImageAttribute
+	next     *ImageAttribute
+}
+type ImageInfo struct {
+	Compression     CompressionType
+	Orientation     OrientationType
+	Temporary       MagickBooleanType
+	Adjoin          MagickBooleanType
+	Antialias       MagickBooleanType
+	Subimage        Size
+	Subrange        Size
+	Depth           Size
+	Size            *VString
+	Tile            *VString
+	Page            *VString
+	Interlace       InterlaceType
+	Endian          EndianType
+	Units           ResolutionType
+	Quality         Size
+	SamplingFactor  *VString
+	ServerName      *VString
+	Font            *VString
+	Texture         *VString
+	Density         *VString
+	Pointsize       float64
+	Fuzz            float64
+	Pen             PixelPacket
+	BackgroundColor PixelPacket
+	BorderColor     PixelPacket
+	MatteColor      PixelPacket
+	Dither          MagickBooleanType
+	Monochrome      MagickBooleanType
+	Progress        MagickBooleanType
+	Colorspace      ColorspaceType
+	Type            ImageType
+	Group           SSize
+	Verbose         MagickBooleanType
+	View            *VString
+	Authenticate    *VString
+	ClientData      *Void
+	File            *FILE
+	Magick          [MaxTextExtent]Char
+	Filename        [MaxTextExtent]Char
+	Cache           *Void
+	Definitions     *Void
+	Attributes      *Image
+	Ping            MagickBooleanType
+	PreviewType     PreviewType
+	Affirm          MagickBooleanType
+	Blob            *Void
+	Length          Size
+	Unique          [MaxTextExtent]Char
+	Zero            [MaxTextExtent]Char
+	Signature       Size
+}
+type ImageType Enum
+
+const (
+	UndefinedType ImageType = iota
+	BilevelType
+	GrayscaleType
+	GrayscaleMatteType
+	PaletteType
+	PaletteMatteType
+	TrueColorType
+	TrueColorMatteType
+	ColorSeparationType
+	ColorSeparationMatteType
+	OptimizeType
+)
+
+type InterlaceType Enum
+
+const (
+	UndefinedInterlace InterlaceType = iota
+	NoInterlace
+	LineInterlace
+	PlaneInterlace
+	PartitionInterlace
+)
+
+type LineCap Enum
+
+const (
+	UndefinedCap LineCap = iota
+	ButtCap
+	RoundCap
+	SquareCap
+)
+
+type LineJoin Enum
+
+const (
+	UndefinedJoin LineJoin = iota
+	MiterJoin
+	RoundJoin
+	BevelJoin
+)
+
+type MetricType Enum
+
+const (
+	UndefinedMetric MetricType = iota
+	MeanAbsoluteErrorMetric
+	MeanSquaredErrorMetric
+	PeakAbsoluteErrorMetric
+	PeakSignalToNoiseRatioMetric
+	RootMeanSquaredErrorMetric
+)
+
+type OrientationType Enum
+
+const (
+	UndefinedOrientation OrientationType = iota
+	TopLeftOrientation
+	TopRightOrientation
+	BottomRightOrientation
+	BottomLeftOrientation
+	LeftTopOrientation
+	RightTopOrientation
+	RightBottomOrientation
+	LeftBottomOrientation
+)
+
+type PixelPacket struct {
+	Blue, Green, Red, Opacity Quantum
+}
+type PixelPacketBE struct {
+	Red, Green, Blue, Opacity Quantum
+}
+type PointInfo struct {
+	X, Y float64
+}
+type PreviewType Enum
+
+const (
+	UndefinedPreview PreviewType = iota
+	RotatePreview
+	ShearPreview
+	RollPreview
+	HuePreview
+	SaturationPreview
+	BrightnessPreview
+	GammaPreview
+	SpiffPreview
+	DullPreview
+	GrayscalePreview
+	QuantizePreview
+	DespecklePreview
+	ReduceNoisePreview
+	AddNoisePreview
+	SharpenPreview
+	BlurPreview
+	ThresholdPreview
+	EdgeDetectPreview
+	SpreadPreview
+	SolarizePreview
+	ShadePreview
+	RaisePreview
+	SegmentPreview
+	SwirlPreview
+	ImplodePreview
+	WavePreview
+	OilPaintPreview
+	CharcoalDrawingPreview
+	JPEGPreview
+)
+
+type RectangleInfo struct {
+	Width, Height Size
+	X, Y          SSize
+}
+
+type ReferenceType Enum
+
+const (
+	UndefinedReference ReferenceType = iota
+	GradientReference
+)
+
+type RenderingIntent Enum
+
+const (
+	UndefinedIntent RenderingIntent = iota
+	SaturationIntent
+	PerceptualIntent
+	AbsoluteIntent
+	RelativeIntent
+)
+
+type ResolutionType Enum
+
+const (
+	UndefinedResolution ResolutionType = iota
+	PixelsPerInchResolution
+	PixelsPerCentimeterResolution
+)
+
+type SegmentInfo struct {
+	X1, Y1, X2, Y2 float64
+}
+
+type SpreadMethod Enum
+
+const (
+	UndefinedSpread SpreadMethod = iota
+	PadSpread
+	ReflectSpread
+	RepeatSpread
+)
+
+type StorageType Enum
+
+const (
+	CharPixel StorageType = iota
+	ShortPixel
+	IntegerPixel
+	LongPixel
+	FloatPixel
+	DoublePixel
+)
+
+type StretchType Enum
+
+const (
+	NormalStretch StretchType = iota
+	UltraCondensedStretch
+	ExtraCondensedStretch
+	CondensedStretch
+	SemiCondensedStretch
+	SemiExpandedStretch
+	ExpandedStretch
+	ExtraExpandedStretch
+	UltraExpandedStretch
+	AnyStretch
+)
+
+type StyleType Enum
+
+const (
+	NormalStyle StyleType = iota
+	ItalicStyle
+	ObliqueStyle
+	AnyStyle
+)
+
+type Timer struct {
+	Start,
+	Stop,
+	Total float64
+}
+type TimerInfo struct {
+	User      Timer
+	Elapsed   Timer
+	State     TimerState
+	Signature Size
+}
+type TimerState Enum
+
+const (
+	UndefinedTimerState TimerState = iota
+	StoppedTimerState
+	RunningTimerState
+)
+
+type TypeMetric struct {
+	PixelsPerEm        PointInfo
+	Ascent             float64
+	Descent            float64
+	Width              float64
+	Height             float64
+	MaxAdvance         float64
+	Bounds             SegmentInfo
+	UnderlinePosition  float64
+	UnderlineThickness float64
 }
 
 // Annotate

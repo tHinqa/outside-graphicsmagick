@@ -13,7 +13,10 @@ import (
 
 type Quantum byte //Q8
 
-const MaxTextExtent = 2053
+const (
+	MaxTextExtent = 2053
+	SignatureSize = 64
+)
 
 type (
 	fix uintptr
@@ -27,17 +30,40 @@ type (
 
 	Char              byte
 	Enum              int
-	MagickBooleanType uint
-	Size              uint // TODO(t):size_t on gcc vs msc 32 vs 64
-	SSize             int  // TODO(t):ssize_t on gcc vs msc 32 vs 64
+	IndexPacket       Quantum
+	MagickBooleanType uint  // bool
+	MagickSizeType    int64 // code says int64 doc says uint64
+	MagickStatusType  uint  // bool
+	Size              uint  // TODO(t):size_t on gcc vs msc 32 vs 64
+	SSize             int   // TODO(t):ssize_t on gcc vs msc 32 vs 64
 )
 
 // Opaque types
 type (
-	Ascii85Info   struct{}
-	BlobInfo      struct{}
-	SemaphoreInfo struct{}
-	Void          struct{}
+	Ascii85Info          struct{}
+	BlobInfo             struct{}
+	ImageProfileIterator struct{}
+	SemaphoreInfo        struct{}
+	ViewInfo             struct{}
+	Void                 struct{}
+)
+
+type (
+	DecoderHandler                  func(*ImageInfo, *ExceptionInfo) *Image
+	EncoderHandler                  func(*ImageInfo, *Image) uint
+	MagickFreeFunc                  func(ptr *Void)
+	MagickHandler                   func(*byte, Size) uint
+	MagickMallocFunc                func(size Size) *Void
+	MagickReallocFunc               func(ptr *Void, size Size) *Void
+	MonitorHandler                  func(text string, quantum int64, span uint64, exception *ExceptionInfo) bool
+	PixelIteratorMonoReadCallback   func(mutableData, immutableData *Void, constImage *Image, pixels *PixelPacket, indexes *IndexPacket, nPixels SSize, exception *ExceptionInfo) bool
+	PixelIteratorMonoModifyCallback func(mutableData, immutableData *Void, constImage *Image, pixels *PixelPacket, indexes *IndexPacket, nPixels SSize, exception *ExceptionInfo) bool
+	PixelIteratorDualReadCallback   func(mutableData, immutableData *Void, constImage1 *Image, pixels1 *PixelPacket, indexes1 *IndexPacket, nPixels1 SSize, constImage2 *Image, pixels2 *PixelPacket, indexes2 *IndexPacket, nPixels2 SSize, exception *ExceptionInfo) bool
+	PixelIteratorDualModifyCallback func(mutableData, immutableData *Void, sourceImage *Image, sourcePixels *PixelPacket, sourceIndexes *IndexPacket, updImage *Image, updPixels *PixelPacket, updIndexes *IndexPacket, nPixels SSize, exception *ExceptionInfo) bool
+	PixelIteratorDualNewCallback    PixelIteratorDualModifyCallback
+
+	PixelIteratorTripleModifyCallback func(mutableData, immutableData *Void, source1Image *Image, source1Pixels *PixelPacket, source1Indexes *IndexPacket, source2Image *Image, source2Pixels *PixelPacket, source2Indexes *IndexPacket, updateImage *Image, updatePixels *PixelPacket, updateIndexes *IndexPacket, nPixels Size, exception *ExceptionInfo) bool
+	PixelIteratorTripleNewCallback    PixelIteratorTripleModifyCallback
 )
 
 func init() {
@@ -49,38 +75,38 @@ func init() {
 
 var DLL = "CORE_RL_magick_.dll"
 var allApis = Apis{
-	// {"AccessCacheViewPixels", &AccessCacheViewPixels},
+	{"AccessCacheViewPixels", &AccessCacheViewPixels},
 	// {"AccessDefaultCacheView", &AccessDefaultCacheView},
 	{"AccessDefinition", &AccessDefinition},
-	// {"AccessImmutableIndexes", &AccessImmutableIndexes},
-	// {"AccessMutableIndexes", &AccessMutableIndexes},
-	// {"AccessMutablePixels", &AccessMutablePixels},
+	{"AccessImmutableIndexes", &AccessImmutableIndexes},
+	{"AccessMutableIndexes", &AccessMutableIndexes},
+	{"AccessMutablePixels", &AccessMutablePixels},
 	// {"AccessThreadViewData", &AccessThreadViewData},
 	// {"AccessThreadViewDataById", &AccessThreadViewDataById},
 	// {"AcquireCacheView", &AcquireCacheView},
-	// {"AcquireCacheViewIndexes", &AcquireCacheViewIndexes},
-	// {"AcquireCacheViewPixels", &AcquireCacheViewPixels},
-	// {"AcquireImagePixels", &AcquireImagePixels},
+	{"AcquireCacheViewIndexes", &AcquireCacheViewIndexes},
+	{"AcquireCacheViewPixels", &AcquireCacheViewPixels},
+	{"AcquireImagePixels", &AcquireImagePixels},
 	// {"AcquireMagickRandomKernel", &AcquireMagickRandomKernel},
-	// {"AcquireMagickResource", &AcquireMagickResource},
+	{"AcquireMagickResource", &AcquireMagickResource},
 	// {"AcquireMemory", &AcquireMemory},
-	// {"AcquireOneCacheViewPixel", &AcquireOneCacheViewPixel},
-	// {"AcquireOnePixel", &AcquireOnePixel},
-	// {"AcquireOnePixelByReference", &AcquireOnePixelByReference},
+	{"AcquireOneCacheViewPixel", &AcquireOneCacheViewPixel},
+	{"AcquireOnePixel", &AcquireOnePixel},
+	{"AcquireOnePixelByReference", &AcquireOnePixelByReference},
 	// {"AcquireSemaphoreInfo", &AcquireSemaphoreInfo},
 	// {"AcquireString", &AcquireString},
 	// {"AcquireTemporaryFileDescriptor", &AcquireTemporaryFileDescriptor},
 	// {"AcquireTemporaryFileName", &AcquireTemporaryFileName},
 	// {"AcquireTemporaryFileStream", &AcquireTemporaryFileStream},
-	// {"AdaptiveThresholdImage", &AdaptiveThresholdImage},
+	{"AdaptiveThresholdImage", &AdaptiveThresholdImage},
 	{"AddDefinition", &AddDefinition},
 	{"AddDefinitions", &AddDefinitions},
-	// {"AddNoiseImage", &AddNoiseImage},
-	// {"AddNoiseImageChannel", &AddNoiseImageChannel},
-	// {"AffineTransformImage", &AffineTransformImage},
+	{"AddNoiseImage", &AddNoiseImage},
+	{"AddNoiseImageChannel", &AddNoiseImageChannel},
+	{"AffineTransformImage", &AffineTransformImage},
 	{"AllocateImage", &AllocateImage},
 	{"AllocateImageColormap", &AllocateImageColormap},
-	// {"AllocateImageProfileIterator", &AllocateImageProfileIterator},
+	{"AllocateImageProfileIterator", &AllocateImageProfileIterator},
 	{"AllocateNextImage", &AllocateNextImage},
 	// {"AllocateSemaphoreInfo", &AllocateSemaphoreInfo},
 	// {"AllocateString", &AllocateString},
@@ -91,8 +117,8 @@ var allApis = Apis{
 	{"AnimateImages", &AnimateImages},
 	{"AnnotateImage", &AnnotateImage},
 	// {"AppendImageFormat", &AppendImageFormat},
-	// {"AppendImageProfile", &AppendImageProfile},
-	// {"AppendImageToList", &AppendImageToList},
+	{"AppendImageProfile", &AppendImageProfile},
+	{"AppendImageToList", &AppendImageToList},
 	{"AppendImages", &AppendImages},
 	// {"Ascii85Encode", &Ascii85Encode},
 	// {"Ascii85Flush", &Ascii85Flush},
@@ -100,29 +126,29 @@ var allApis = Apis{
 	// {"Ascii85WriteByteHook", &Ascii85WriteByteHook},
 	// {"AssignThreadViewData", &AssignThreadViewData},
 	{"AttachBlob", &AttachBlob},
-	// {"AutoOrientImage", &AutoOrientImage},
+	{"AutoOrientImage", &AutoOrientImage},
 	{"AverageImages", &AverageImages},
 	// {"Base64Decode", &Base64Decode},
 	// {"Base64Encode", &Base64Encode},
 	// {"BenchmarkImageCommand", &BenchmarkImageCommand},
-	// {"BlackThresholdImage", &BlackThresholdImage},
+	{"BlackThresholdImage", &BlackThresholdImage},
 	{"BlobIsSeekable", &BlobIsSeekable},
 	// {"BlobModeToString", &BlobModeToString},
 	{"BlobReserveSize", &BlobReserveSize},
 	{"BlobToFile", &BlobToFile},
 	{"BlobToImage", &BlobToImage},
 	// {"BlobWriteByteHook", &BlobWriteByteHook},
-	// {"BlurImage", &BlurImage},
-	// {"BlurImageChannel", &BlurImageChannel},
+	{"BlurImage", &BlurImage},
+	{"BlurImageChannel", &BlurImageChannel},
 	{"BorderImage", &BorderImage},
-	// {"CatchException", &CatchException},
+	{"CatchException", &CatchException},
 	{"CatchImageException", &CatchImageException},
 	{"CdlImage", &CdlImage},
 	{"ChannelImage", &ChannelImage},
-	// {"ChannelThresholdImage", &ChannelThresholdImage},
+	{"ChannelThresholdImage", &ChannelThresholdImage},
 	// {"ChannelTypeToString", &ChannelTypeToString},
-	// {"CharcoalImage", &CharcoalImage},
-	// {"ChopImage", &ChopImage},
+	{"CharcoalImage", &CharcoalImage},
+	{"ChopImage", &ChopImage},
 	// {"ClassTypeToString", &ClassTypeToString},
 	// {"ClipImage", &ClipImage},
 	{"ClipPathImage", &ClipPathImage},
@@ -131,68 +157,68 @@ var allApis = Apis{
 	{"CloneImage", &CloneImage},
 	{"CloneImageAttributes", &CloneImageAttributes},
 	{"CloneImageInfo", &CloneImageInfo},
-	// {"CloneImageList", &CloneImageList},
+	{"CloneImageList", &CloneImageList},
 	// {"CloneMemory", &CloneMemory},
-	// {"CloneMontageInfo", &CloneMontageInfo},
-	// {"CloneQuantizeInfo", &CloneQuantizeInfo},
+	{"CloneMontageInfo", &CloneMontageInfo},
+	{"CloneQuantizeInfo", &CloneQuantizeInfo},
 	// {"CloneString", &CloneString},
 	// {"CloseBlob", &CloseBlob},
 	// {"CloseCacheView", &CloseCacheView},
-	// {"CoalesceImages", &CoalesceImages},
-	// {"ColorFloodfillImage", &ColorFloodfillImage},
-	// {"ColorMatrixImage", &ColorMatrixImage},
-	// {"ColorizeImage", &ColorizeImage},
+	{"CoalesceImages", &CoalesceImages},
+	{"ColorFloodfillImage", &ColorFloodfillImage},
+	{"ColorMatrixImage", &ColorMatrixImage},
+	{"ColorizeImage", &ColorizeImage},
 	// {"ColorspaceTypeToString", &ColorspaceTypeToString},
 	// {"CompareImageCommand", &CompareImageCommand},
 	{"CompositeImage", &CompositeImage},
 	// {"CompositeImageCommand", &CompositeImageCommand},
 	// {"CompositeImageRegion", &CompositeImageRegion},
 	// {"CompositeOperatorToString", &CompositeOperatorToString},
-	// {"CompressImageColormap", &CompressImageColormap},
+	{"CompressImageColormap", &CompressImageColormap},
 	// {"CompressionTypeToString", &CompressionTypeToString},
 	// {"ConcatenateString", &ConcatenateString},
 	// {"ConfirmAccessModeToString", &ConfirmAccessModeToString},
 	// {"ConjureImageCommand", &ConjureImageCommand},
 	{"ConstituteImage", &ConstituteImage},
-	// {"ConstituteTextureImage", &ConstituteTextureImage},
+	{"ConstituteTextureImage", &ConstituteTextureImage},
 	// {"ContinueTimer", &ContinueTimer},
 	// {"Contrast", &Contrast},
-	// {"ContrastImage", &ContrastImage},
+	{"ContrastImage", &ContrastImage},
 	// {"ConvertImageCommand", &ConvertImageCommand},
-	// {"ConvolveImage", &ConvolveImage},
-	// {"CopyException", &CopyException},
-	// {"CropImage", &CropImage},
+	{"ConvolveImage", &ConvolveImage},
+	{"CopyException", &CopyException},
+	{"CropImage", &CropImage},
 	// {"CropImageToHBITMAP", &CropImageToHBITMAP},
 	{"CycleColormapImage", &CycleColormapImage},
-	// {"DeallocateImageProfileIterator", &DeallocateImageProfileIterator},
-	// {"DeconstructImages", &DeconstructImages},
+	{"DeallocateImageProfileIterator", &DeallocateImageProfileIterator},
+	{"DeconstructImages", &DeconstructImages},
 	// {"DefineClientName", &DefineClientName},
 	// {"DefineClientPathAndName", &DefineClientPathAndName},
-	// {"DeleteImageFromList", &DeleteImageFromList},
-	// {"DeleteImageProfile", &DeleteImageProfile},
-	// {"DeleteMagickRegistry", &DeleteMagickRegistry},
+	{"DeleteImageFromList", &DeleteImageFromList},
+	{"DeleteImageProfile", &DeleteImageProfile},
+	{"DeleteMagickRegistry", &DeleteMagickRegistry},
 	{"DescribeImage", &DescribeImage},
-	// {"DespeckleImage", &DespeckleImage},
+	{"DespeckleImage", &DespeckleImage},
 	{"DestroyBlob", &DestroyBlob},
 	{"DestroyBlobInfo", &DestroyBlobInfo},
 	// {"DestroyColorInfo", &DestroyColorInfo},
 	// {"DestroyConstitute", &DestroyConstitute},
 	// {"DestroyDelegateInfo", &DestroyDelegateInfo},
 	// {"DestroyDrawInfo", &DestroyDrawInfo},
-	// {"DestroyExceptionInfo", &DestroyExceptionInfo},
+	{"DestroyExceptionInfo", &DestroyExceptionInfo},
 	{"DestroyImage", &DestroyImage},
 	{"DestroyImageAttributes", &DestroyImageAttributes},
 	{"DestroyImageInfo", &DestroyImageInfo},
-	// {"DestroyImageList", &DestroyImageList},
+	{"DestroyImageList", &DestroyImageList},
 	// {"DestroyImagePixels", &DestroyImagePixels},
 	// {"DestroyLogInfo", &DestroyLogInfo},
-	// {"DestroyMagicInfo", &DestroyMagicInfo},
-	// {"DestroyMagick", &DestroyMagick},
+	{"DestroyMagicInfo", &DestroyMagicInfo},
+	{"DestroyMagick", &DestroyMagick},
 	// {"DestroyMagickModules", &DestroyMagickModules},
 	// {"DestroyMagickResources", &DestroyMagickResources},
 	// {"DestroyModuleInfo", &DestroyModuleInfo},
-	// {"DestroyMontageInfo", &DestroyMontageInfo},
-	// {"DestroyQuantizeInfo", &DestroyQuantizeInfo},
+	{"DestroyMontageInfo", &DestroyMontageInfo},
+	{"DestroyQuantizeInfo", &DestroyQuantizeInfo},
 	// {"DestroySemaphore", &DestroySemaphore},
 	// {"DestroySemaphoreInfo", &DestroySemaphoreInfo},
 	// {"DestroyTemporaryFiles", &DestroyTemporaryFiles},
@@ -204,128 +230,128 @@ var allApis = Apis{
 	{"DispatchImage", &DispatchImage},
 	// {"DisplayImageCommand", &DisplayImageCommand},
 	{"DisplayImages", &DisplayImages},
-	// {"DrawAffine", &DrawAffine},
+	{"DrawAffine", &DrawAffine},
 	// {"DrawAffineImage", &DrawAffineImage},
-	// {"DrawAllocateContext", &DrawAllocateContext},
-	// {"DrawAnnotation", &DrawAnnotation},
-	// {"DrawArc", &DrawArc},
-	// {"DrawBezier", &DrawBezier},
-	// {"DrawCircle", &DrawCircle},
+	{"DrawAllocateContext", &DrawAllocateContext},
+	{"DrawAnnotation", &DrawAnnotation},
+	{"DrawArc", &DrawArc},
+	{"DrawBezier", &DrawBezier},
+	{"DrawCircle", &DrawCircle},
 	// {"DrawClipPath", &DrawClipPath},
-	// {"DrawColor", &DrawColor},
-	// {"DrawComment", &DrawComment},
-	// {"DrawComposite", &DrawComposite},
-	// {"DrawDestroyContext", &DrawDestroyContext},
-	// {"DrawEllipse", &DrawEllipse},
-	// {"DrawGetClipPath", &DrawGetClipPath},
-	// {"DrawGetClipRule", &DrawGetClipRule},
-	// {"DrawGetClipUnits", &DrawGetClipUnits},
-	// {"DrawGetFillColor", &DrawGetFillColor},
-	// {"DrawGetFillOpacity", &DrawGetFillOpacity},
-	// {"DrawGetFillRule", &DrawGetFillRule},
-	// {"DrawGetFont", &DrawGetFont},
-	// {"DrawGetFontFamily", &DrawGetFontFamily},
-	// {"DrawGetFontSize", &DrawGetFontSize},
-	// {"DrawGetFontStretch", &DrawGetFontStretch},
-	// {"DrawGetFontStyle", &DrawGetFontStyle},
-	// {"DrawGetFontWeight", &DrawGetFontWeight},
-	// {"DrawGetGravity", &DrawGetGravity},
-	// {"DrawGetStrokeAntialias", &DrawGetStrokeAntialias},
-	// {"DrawGetStrokeColor", &DrawGetStrokeColor},
-	// {"DrawGetStrokeDashArray", &DrawGetStrokeDashArray},
-	// {"DrawGetStrokeDashOffset", &DrawGetStrokeDashOffset},
-	// {"DrawGetStrokeLineCap", &DrawGetStrokeLineCap},
-	// {"DrawGetStrokeLineJoin", &DrawGetStrokeLineJoin},
-	// {"DrawGetStrokeMiterLimit", &DrawGetStrokeMiterLimit},
-	// {"DrawGetStrokeOpacity", &DrawGetStrokeOpacity},
-	// {"DrawGetStrokeWidth", &DrawGetStrokeWidth},
-	// {"DrawGetTextAntialias", &DrawGetTextAntialias},
-	// {"DrawGetTextDecoration", &DrawGetTextDecoration},
-	// {"DrawGetTextEncoding", &DrawGetTextEncoding},
-	// {"DrawGetTextUnderColor", &DrawGetTextUnderColor},
+	{"DrawColor", &DrawColor},
+	{"DrawComment", &DrawComment},
+	{"DrawComposite", &DrawComposite},
+	{"DrawDestroyContext", &DrawDestroyContext},
+	{"DrawEllipse", &DrawEllipse},
+	{"DrawGetClipPath", &DrawGetClipPath},
+	{"DrawGetClipRule", &DrawGetClipRule},
+	{"DrawGetClipUnits", &DrawGetClipUnits},
+	{"DrawGetFillColor", &DrawGetFillColor},
+	{"DrawGetFillOpacity", &DrawGetFillOpacity},
+	{"DrawGetFillRule", &DrawGetFillRule},
+	{"DrawGetFont", &DrawGetFont},
+	{"DrawGetFontFamily", &DrawGetFontFamily},
+	{"DrawGetFontSize", &DrawGetFontSize},
+	{"DrawGetFontStretch", &DrawGetFontStretch},
+	{"DrawGetFontStyle", &DrawGetFontStyle},
+	{"DrawGetFontWeight", &DrawGetFontWeight},
+	{"DrawGetGravity", &DrawGetGravity},
+	{"DrawGetStrokeAntialias", &DrawGetStrokeAntialias},
+	{"DrawGetStrokeColor", &DrawGetStrokeColor},
+	{"DrawGetStrokeDashArray", &DrawGetStrokeDashArray},
+	{"DrawGetStrokeDashOffset", &DrawGetStrokeDashOffset},
+	{"DrawGetStrokeLineCap", &DrawGetStrokeLineCap},
+	{"DrawGetStrokeLineJoin", &DrawGetStrokeLineJoin},
+	{"DrawGetStrokeMiterLimit", &DrawGetStrokeMiterLimit},
+	{"DrawGetStrokeOpacity", &DrawGetStrokeOpacity},
+	{"DrawGetStrokeWidth", &DrawGetStrokeWidth},
+	{"DrawGetTextAntialias", &DrawGetTextAntialias},
+	{"DrawGetTextDecoration", &DrawGetTextDecoration},
+	{"DrawGetTextEncoding", &DrawGetTextEncoding},
+	{"DrawGetTextUnderColor", &DrawGetTextUnderColor},
 	// {"DrawImage", &DrawImage},
-	// {"DrawLine", &DrawLine},
-	// {"DrawMatte", &DrawMatte},
-	// {"DrawPathClose", &DrawPathClose},
-	// {"DrawPathCurveToAbsolute", &DrawPathCurveToAbsolute},
-	// {"DrawPathCurveToQuadraticBezierAbsolute", &DrawPathCurveToQuadraticBezierAbsolute},
-	// {"DrawPathCurveToQuadraticBezierRelative", &DrawPathCurveToQuadraticBezierRelative},
-	// {"DrawPathCurveToQuadraticBezierSmoothAbsolute", &DrawPathCurveToQuadraticBezierSmoothAbsolute},
-	// {"DrawPathCurveToQuadraticBezierSmoothRelative", &DrawPathCurveToQuadraticBezierSmoothRelative},
-	// {"DrawPathCurveToRelative", &DrawPathCurveToRelative},
-	// {"DrawPathCurveToSmoothAbsolute", &DrawPathCurveToSmoothAbsolute},
-	// {"DrawPathCurveToSmoothRelative", &DrawPathCurveToSmoothRelative},
-	// {"DrawPathEllipticArcAbsolute", &DrawPathEllipticArcAbsolute},
-	// {"DrawPathEllipticArcRelative", &DrawPathEllipticArcRelative},
-	// {"DrawPathFinish", &DrawPathFinish},
-	// {"DrawPathLineToAbsolute", &DrawPathLineToAbsolute},
-	// {"DrawPathLineToHorizontalAbsolute", &DrawPathLineToHorizontalAbsolute},
-	// {"DrawPathLineToHorizontalRelative", &DrawPathLineToHorizontalRelative},
-	// {"DrawPathLineToRelative", &DrawPathLineToRelative},
-	// {"DrawPathLineToVerticalAbsolute", &DrawPathLineToVerticalAbsolute},
-	// {"DrawPathLineToVerticalRelative", &DrawPathLineToVerticalRelative},
-	// {"DrawPathMoveToAbsolute", &DrawPathMoveToAbsolute},
-	// {"DrawPathMoveToRelative", &DrawPathMoveToRelative},
-	// {"DrawPathStart", &DrawPathStart},
+	{"DrawLine", &DrawLine},
+	{"DrawMatte", &DrawMatte},
+	{"DrawPathClose", &DrawPathClose},
+	{"DrawPathCurveToAbsolute", &DrawPathCurveToAbsolute},
+	{"DrawPathCurveToQuadraticBezierAbsolute", &DrawPathCurveToQuadraticBezierAbsolute},
+	{"DrawPathCurveToQuadraticBezierRelative", &DrawPathCurveToQuadraticBezierRelative},
+	{"DrawPathCurveToQuadraticBezierSmoothAbsolute", &DrawPathCurveToQuadraticBezierSmoothAbsolute},
+	{"DrawPathCurveToQuadraticBezierSmoothRelative", &DrawPathCurveToQuadraticBezierSmoothRelative},
+	{"DrawPathCurveToRelative", &DrawPathCurveToRelative},
+	{"DrawPathCurveToSmoothAbsolute", &DrawPathCurveToSmoothAbsolute},
+	{"DrawPathCurveToSmoothRelative", &DrawPathCurveToSmoothRelative},
+	{"DrawPathEllipticArcAbsolute", &DrawPathEllipticArcAbsolute},
+	{"DrawPathEllipticArcRelative", &DrawPathEllipticArcRelative},
+	{"DrawPathFinish", &DrawPathFinish},
+	{"DrawPathLineToAbsolute", &DrawPathLineToAbsolute},
+	{"DrawPathLineToHorizontalAbsolute", &DrawPathLineToHorizontalAbsolute},
+	{"DrawPathLineToHorizontalRelative", &DrawPathLineToHorizontalRelative},
+	{"DrawPathLineToRelative", &DrawPathLineToRelative},
+	{"DrawPathLineToVerticalAbsolute", &DrawPathLineToVerticalAbsolute},
+	{"DrawPathLineToVerticalRelative", &DrawPathLineToVerticalRelative},
+	{"DrawPathMoveToAbsolute", &DrawPathMoveToAbsolute},
+	{"DrawPathMoveToRelative", &DrawPathMoveToRelative},
+	{"DrawPathStart", &DrawPathStart},
 	// {"DrawPatternPath", &DrawPatternPath},
-	// {"DrawPeekGraphicContext", &DrawPeekGraphicContext},
-	// {"DrawPoint", &DrawPoint},
-	// {"DrawPolygon", &DrawPolygon},
-	// {"DrawPolyline", &DrawPolyline},
-	// {"DrawPopClipPath", &DrawPopClipPath},
-	// {"DrawPopDefs", &DrawPopDefs},
-	// {"DrawPopGraphicContext", &DrawPopGraphicContext},
-	// {"DrawPopPattern", &DrawPopPattern},
-	// {"DrawPushClipPath", &DrawPushClipPath},
-	// {"DrawPushDefs", &DrawPushDefs},
-	// {"DrawPushGraphicContext", &DrawPushGraphicContext},
-	// {"DrawPushPattern", &DrawPushPattern},
-	// {"DrawRectangle", &DrawRectangle},
-	// {"DrawRender", &DrawRender},
-	// {"DrawRotate", &DrawRotate},
-	// {"DrawRoundRectangle", &DrawRoundRectangle},
-	// {"DrawScale", &DrawScale},
-	// {"DrawSetClipPath", &DrawSetClipPath},
-	// {"DrawSetClipRule", &DrawSetClipRule},
-	// {"DrawSetClipUnits", &DrawSetClipUnits},
-	// {"DrawSetFillColor", &DrawSetFillColor},
-	// {"DrawSetFillColorString", &DrawSetFillColorString},
-	// {"DrawSetFillOpacity", &DrawSetFillOpacity},
-	// {"DrawSetFillPatternURL", &DrawSetFillPatternURL},
-	// {"DrawSetFillRule", &DrawSetFillRule},
-	// {"DrawSetFont", &DrawSetFont},
-	// {"DrawSetFontFamily", &DrawSetFontFamily},
-	// {"DrawSetFontSize", &DrawSetFontSize},
-	// {"DrawSetFontStretch", &DrawSetFontStretch},
-	// {"DrawSetFontStyle", &DrawSetFontStyle},
-	// {"DrawSetFontWeight", &DrawSetFontWeight},
-	// {"DrawSetGravity", &DrawSetGravity},
-	// {"DrawSetStrokeAntialias", &DrawSetStrokeAntialias},
-	// {"DrawSetStrokeColor", &DrawSetStrokeColor},
-	// {"DrawSetStrokeColorString", &DrawSetStrokeColorString},
-	// {"DrawSetStrokeDashArray", &DrawSetStrokeDashArray},
-	// {"DrawSetStrokeDashOffset", &DrawSetStrokeDashOffset},
-	// {"DrawSetStrokeLineCap", &DrawSetStrokeLineCap},
-	// {"DrawSetStrokeLineJoin", &DrawSetStrokeLineJoin},
-	// {"DrawSetStrokeMiterLimit", &DrawSetStrokeMiterLimit},
-	// {"DrawSetStrokeOpacity", &DrawSetStrokeOpacity},
-	// {"DrawSetStrokePatternURL", &DrawSetStrokePatternURL},
-	// {"DrawSetStrokeWidth", &DrawSetStrokeWidth},
-	// {"DrawSetTextAntialias", &DrawSetTextAntialias},
-	// {"DrawSetTextDecoration", &DrawSetTextDecoration},
-	// {"DrawSetTextEncoding", &DrawSetTextEncoding},
-	// {"DrawSetTextUnderColor", &DrawSetTextUnderColor},
-	// {"DrawSetTextUnderColorString", &DrawSetTextUnderColorString},
-	// {"DrawSetViewbox", &DrawSetViewbox},
-	// {"DrawSkewX", &DrawSkewX},
-	// {"DrawSkewY", &DrawSkewY},
-	// {"DrawTranslate", &DrawTranslate},
+	{"DrawPeekGraphicContext", &DrawPeekGraphicContext},
+	{"DrawPoint", &DrawPoint},
+	{"DrawPolygon", &DrawPolygon},
+	{"DrawPolyline", &DrawPolyline},
+	{"DrawPopClipPath", &DrawPopClipPath},
+	{"DrawPopDefs", &DrawPopDefs},
+	{"DrawPopGraphicContext", &DrawPopGraphicContext},
+	{"DrawPopPattern", &DrawPopPattern},
+	{"DrawPushClipPath", &DrawPushClipPath},
+	{"DrawPushDefs", &DrawPushDefs},
+	{"DrawPushGraphicContext", &DrawPushGraphicContext},
+	{"DrawPushPattern", &DrawPushPattern},
+	{"DrawRectangle", &DrawRectangle},
+	{"DrawRender", &DrawRender},
+	{"DrawRotate", &DrawRotate},
+	{"DrawRoundRectangle", &DrawRoundRectangle},
+	{"DrawScale", &DrawScale},
+	{"DrawSetClipPath", &DrawSetClipPath},
+	{"DrawSetClipRule", &DrawSetClipRule},
+	{"DrawSetClipUnits", &DrawSetClipUnits},
+	{"DrawSetFillColor", &DrawSetFillColor},
+	{"DrawSetFillColorString", &DrawSetFillColorString},
+	{"DrawSetFillOpacity", &DrawSetFillOpacity},
+	{"DrawSetFillPatternURL", &DrawSetFillPatternURL},
+	{"DrawSetFillRule", &DrawSetFillRule},
+	{"DrawSetFont", &DrawSetFont},
+	{"DrawSetFontFamily", &DrawSetFontFamily},
+	{"DrawSetFontSize", &DrawSetFontSize},
+	{"DrawSetFontStretch", &DrawSetFontStretch},
+	{"DrawSetFontStyle", &DrawSetFontStyle},
+	{"DrawSetFontWeight", &DrawSetFontWeight},
+	{"DrawSetGravity", &DrawSetGravity},
+	{"DrawSetStrokeAntialias", &DrawSetStrokeAntialias},
+	{"DrawSetStrokeColor", &DrawSetStrokeColor},
+	{"DrawSetStrokeColorString", &DrawSetStrokeColorString},
+	{"DrawSetStrokeDashArray", &DrawSetStrokeDashArray},
+	{"DrawSetStrokeDashOffset", &DrawSetStrokeDashOffset},
+	{"DrawSetStrokeLineCap", &DrawSetStrokeLineCap},
+	{"DrawSetStrokeLineJoin", &DrawSetStrokeLineJoin},
+	{"DrawSetStrokeMiterLimit", &DrawSetStrokeMiterLimit},
+	{"DrawSetStrokeOpacity", &DrawSetStrokeOpacity},
+	{"DrawSetStrokePatternURL", &DrawSetStrokePatternURL},
+	{"DrawSetStrokeWidth", &DrawSetStrokeWidth},
+	{"DrawSetTextAntialias", &DrawSetTextAntialias},
+	{"DrawSetTextDecoration", &DrawSetTextDecoration},
+	{"DrawSetTextEncoding", &DrawSetTextEncoding},
+	{"DrawSetTextUnderColor", &DrawSetTextUnderColor},
+	{"DrawSetTextUnderColorString", &DrawSetTextUnderColorString},
+	{"DrawSetViewbox", &DrawSetViewbox},
+	{"DrawSkewX", &DrawSkewX},
+	{"DrawSkewY", &DrawSkewY},
+	{"DrawTranslate", &DrawTranslate},
 	// {"EOFBlob", &EOFBlob},
-	// {"EdgeImage", &EdgeImage},
-	// {"EmbossImage", &EmbossImage},
+	{"EdgeImage", &EdgeImage},
+	{"EmbossImage", &EmbossImage},
 	// {"EndianTypeToString", &EndianTypeToString},
-	// {"EnhanceImage", &EnhanceImage},
-	// {"EqualizeImage", &EqualizeImage},
+	{"EnhanceImage", &EnhanceImage},
+	{"EqualizeImage", &EqualizeImage},
 	// {"EscapeString", &EscapeString},
 	// {"ExecuteModuleProcess", &ExecuteModuleProcess},
 	// {"ExecuteStaticModuleProcess", &ExecuteStaticModuleProcess},
@@ -334,24 +360,24 @@ var allApis = Apis{
 	// {"ExpandFilename", &ExpandFilename},
 	// {"ExpandFilenames", &ExpandFilenames},
 	{"ExportImageChannel", &ExportImageChannel},
-	// {"ExportImagePixelArea", &ExportImagePixelArea},
-	// {"ExportPixelAreaOptionsInit", &ExportPixelAreaOptionsInit},
-	// {"ExportViewPixelArea", &ExportViewPixelArea},
-	// {"ExtentImage", &ExtentImage},
+	{"ExportImagePixelArea", &ExportImagePixelArea},
+	{"ExportPixelAreaOptionsInit", &ExportPixelAreaOptionsInit},
+	{"ExportViewPixelArea", &ExportViewPixelArea},
+	{"ExtentImage", &ExtentImage},
 	{"FileToBlob", &FileToBlob},
-	// {"FinalizeSignature", &FinalizeSignature},
-	// {"FlattenImages", &FlattenImages},
-	// {"FlipImage", &FlipImage},
-	// {"FlopImage", &FlopImage},
+	{"FinalizeSignature", &FinalizeSignature},
+	{"FlattenImages", &FlattenImages},
+	{"FlipImage", &FlipImage},
+	{"FlopImage", &FlopImage},
 	// {"FormatSize", &FormatSize},
 	// {"FormatString", &FormatString},
 	// {"FormatStringList", &FormatStringList},
 	{"FrameImage", &FrameImage},
 	// {"FuzzyColorMatch", &FuzzyColorMatch},
 	// {"GMCommand", &GMCommand},
-	// {"GammaImage", &GammaImage},
-	// {"GaussianBlurImage", &GaussianBlurImage},
-	// {"GaussianBlurImageChannel", &GaussianBlurImageChannel},
+	{"GammaImage", &GammaImage},
+	{"GaussianBlurImage", &GaussianBlurImage},
+	{"GaussianBlurImageChannel", &GaussianBlurImageChannel},
 	// {"GenerateDifferentialNoise", &GenerateDifferentialNoise},
 	// {"GenerateNoise", &GenerateNoise},
 	{"GetBlobFileHandle", &GetBlobFileHandle},
@@ -362,10 +388,10 @@ var allApis = Apis{
 	{"GetBlobStreamData", &GetBlobStreamData},
 	{"GetBlobTemporary", &GetBlobTemporary},
 	// {"GetCacheView", &GetCacheView},
-	// {"GetCacheViewArea", &GetCacheViewArea},
-	// {"GetCacheViewIndexes", &GetCacheViewIndexes},
-	// {"GetCacheViewPixels", &GetCacheViewPixels},
-	// {"GetCacheViewRegion", &GetCacheViewRegion},
+	{"GetCacheViewArea", &GetCacheViewArea},
+	{"GetCacheViewIndexes", &GetCacheViewIndexes},
+	{"GetCacheViewPixels", &GetCacheViewPixels},
+	{"GetCacheViewRegion", &GetCacheViewRegion},
 	// {"GetClientFilename", &GetClientFilename},
 	// {"GetClientName", &GetClientName},
 	// {"GetClientPath", &GetClientPath},
@@ -379,10 +405,10 @@ var allApis = Apis{
 	// {"GetDelegateInfo", &GetDelegateInfo},
 	// {"GetDrawInfo", &GetDrawInfo},
 	// {"GetElapsedTime", &GetElapsedTime},
-	// {"GetExceptionInfo", &GetExceptionInfo},
+	{"GetExceptionInfo", &GetExceptionInfo},
 	// {"GetExecutionPath", &GetExecutionPath},
 	// {"GetExecutionPathUsingName", &GetExecutionPathUsingName},
-	// {"GetFirstImageInList", &GetFirstImageInList},
+	{"GetFirstImageInList", &GetFirstImageInList},
 	// {"GetGeometry", &GetGeometry},
 	{"GetImageAttribute", &GetImageAttribute},
 	// {"GetImageBoundingBox", &GetImageBoundingBox},
@@ -395,53 +421,53 @@ var allApis = Apis{
 	// {"GetImageDepth", &GetImageDepth},
 	{"GetImageDistortion", &GetImageDistortion},
 	{"GetImageException", &GetImageException},
-	// {"GetImageFromList", &GetImageFromList},
-	// {"GetImageFromMagickRegistry", &GetImageFromMagickRegistry},
+	{"GetImageFromList", &GetImageFromList},
+	{"GetImageFromMagickRegistry", &GetImageFromMagickRegistry},
 	{"GetImageGeometry", &GetImageGeometry},
-	// {"GetImageIndexInList", &GetImageIndexInList},
+	{"GetImageIndexInList", &GetImageIndexInList},
 	{"GetImageInfo", &GetImageInfo},
 	// {"GetImageInfoAttribute", &GetImageInfoAttribute},
-	// {"GetImageListLength", &GetImageListLength},
-	// {"GetImageMagick", &GetImageMagick},
-	// {"GetImagePixels", &GetImagePixels},
-	// {"GetImagePixelsEx", &GetImagePixelsEx},
-	// {"GetImageProfile", &GetImageProfile},
-	// {"GetImageQuantizeError", &GetImageQuantizeError},
-	// {"GetImageStatistics", &GetImageStatistics},
+	{"GetImageListLength", &GetImageListLength},
+	{"GetImageMagick", &GetImageMagick},
+	{"GetImagePixels", &GetImagePixels},
+	{"GetImagePixelsEx", &GetImagePixelsEx},
+	{"GetImageProfile", &GetImageProfile},
+	{"GetImageQuantizeError", &GetImageQuantizeError},
+	{"GetImageStatistics", &GetImageStatistics},
 	// {"GetImageType", &GetImageType},
-	// {"GetImageVirtualPixelMethod", &GetImageVirtualPixelMethod},
-	// {"GetIndexes", &GetIndexes},
-	// {"GetLastImageInList", &GetLastImageInList},
-	// {"GetLocaleExceptionMessage", &GetLocaleExceptionMessage},
+	{"GetImageVirtualPixelMethod", &GetImageVirtualPixelMethod},
+	{"GetIndexes", &GetIndexes},
+	{"GetLastImageInList", &GetLastImageInList},
+	{"GetLocaleExceptionMessage", &GetLocaleExceptionMessage},
 	// {"GetLocaleMessage", &GetLocaleMessage},
 	// {"GetLocaleMessageFromID", &GetLocaleMessageFromID},
 	// {"GetMagickCopyright", &GetMagickCopyright},
 	// {"GetMagickDimension", &GetMagickDimension},
 	// {"GetMagickFileFormat", &GetMagickFileFormat},
 	// {"GetMagickGeometry", &GetMagickGeometry},
-	// {"GetMagickInfo", &GetMagickInfo},
-	// {"GetMagickInfoArray", &GetMagickInfoArray},
-	// {"GetMagickRegistry", &GetMagickRegistry},
-	// {"GetMagickResource", &GetMagickResource},
-	// {"GetMagickResourceLimit", &GetMagickResourceLimit},
+	{"GetMagickInfo", &GetMagickInfo},
+	{"GetMagickInfoArray", &GetMagickInfoArray},
+	{"GetMagickRegistry", &GetMagickRegistry},
+	{"GetMagickResource", &GetMagickResource},
+	{"GetMagickResourceLimit", &GetMagickResourceLimit},
 	// {"GetMagickVersion", &GetMagickVersion},
 	// {"GetMagickWebSite", &GetMagickWebSite},
 	// {"GetModuleInfo", &GetModuleInfo},
-	// {"GetMontageInfo", &GetMontageInfo},
-	// {"GetNextImageInList", &GetNextImageInList},
+	{"GetMontageInfo", &GetMontageInfo},
+	{"GetNextImageInList", &GetNextImageInList},
 	{"GetNumberColors", &GetNumberColors},
-	// {"GetOnePixel", &GetOnePixel},
+	{"GetOnePixel", &GetOnePixel},
 	// {"GetOptimalKernelWidth", &GetOptimalKernelWidth},
 	// {"GetOptimalKernelWidth1D", &GetOptimalKernelWidth1D},
 	// {"GetOptimalKernelWidth2D", &GetOptimalKernelWidth2D},
 	// {"GetPageGeometry", &GetPageGeometry},
 	// {"GetPathComponent", &GetPathComponent},
 	// {"GetPixelCacheArea", &GetPixelCacheArea},
-	// {"GetPixels", &GetPixels},
+	{"GetPixels", &GetPixels},
 	// {"GetPostscriptDelegateInfo", &GetPostscriptDelegateInfo},
-	// {"GetPreviousImageInList", &GetPreviousImageInList},
-	// {"GetQuantizeInfo", &GetQuantizeInfo},
-	// {"GetSignatureInfo", &GetSignatureInfo},
+	{"GetPreviousImageInList", &GetPreviousImageInList},
+	{"GetQuantizeInfo", &GetQuantizeInfo},
+	{"GetSignatureInfo", &GetSignatureInfo},
 	// {"GetThreadViewDataSetAllocatedViews", &GetThreadViewDataSetAllocatedViews},
 	// {"GetTimerInfo", &GetTimerInfo},
 	// {"GetTimerResolution", &GetTimerResolution},
@@ -453,10 +479,10 @@ var allApis = Apis{
 	// {"GetUserTime", &GetUserTime},
 	// {"GlobExpression", &GlobExpression},
 	// {"GradientImage", &GradientImage},
-	// {"GrayscalePseudoClassImage", &GrayscalePseudoClassImage},
+	{"GrayscalePseudoClassImage", &GrayscalePseudoClassImage},
 	// {"HSLTransform", &HSLTransform},
 	// {"HWBTransform", &HWBTransform},
-	// {"HaldClutImage", &HaldClutImage},
+	{"HaldClutImage", &HaldClutImage},
 	// {"HighlightStyleToString", &HighlightStyleToString},
 	// {"HuffmanDecodeImage", &HuffmanDecodeImage},
 	// {"HuffmanEncode2Image", &HuffmanEncode2Image},
@@ -464,32 +490,32 @@ var allApis = Apis{
 	// {"Hull", &Hull},
 	// {"IdentifyImageCommand", &IdentifyImageCommand},
 	// {"IdentityAffine", &IdentityAffine},
-	// {"ImageListToArray", &ImageListToArray},
+	{"ImageListToArray", &ImageListToArray},
 	{"ImageToBlob", &ImageToBlob},
 	{"ImageToFile", &ImageToFile},
 	// {"ImageToHBITMAP", &ImageToHBITMAP},
 	// {"ImageToHuffman2DBlob", &ImageToHuffman2DBlob},
 	// {"ImageToJPEGBlob", &ImageToJPEGBlob},
 	// {"ImageTypeToString", &ImageTypeToString},
-	// {"ImplodeImage", &ImplodeImage},
+	{"ImplodeImage", &ImplodeImage},
 	{"ImportImageChannel", &ImportImageChannel},
 	{"ImportImageChannelsMasked", &ImportImageChannelsMasked},
-	// {"ImportImageCommand", &ImportImageCommand},
-	// {"ImportImagePixelArea", &ImportImagePixelArea},
+	{"ImportImageCommand", &ImportImageCommand},
+	{"ImportImagePixelArea", &ImportImagePixelArea},
 	// {"ImportPixelAreaOptionsInit", &ImportPixelAreaOptionsInit},
-	// {"ImportViewPixelArea", &ImportViewPixelArea},
+	{"ImportViewPixelArea", &ImportViewPixelArea},
 	{"InitializeDifferenceImageOptions", &InitializeDifferenceImageOptions},
 	{"InitializeDifferenceStatistics", &InitializeDifferenceStatistics},
 	// {"InitializeMagicInfo", &InitializeMagicInfo},
-	// {"InitializeMagick", &InitializeMagick},
+	{"InitializeMagick", &InitializeMagick},
 	// {"InitializeMagickClientPathAndName", &InitializeMagickClientPathAndName},
 	// {"InitializeMagickModules", &InitializeMagickModules},
 	// {"InitializeMagickRandomKernel", &InitializeMagickRandomKernel},
 	// {"InitializeMagickResources", &InitializeMagickResources},
 	// {"InitializeMagickSignalHandlers", &InitializeMagickSignalHandlers},
-	// {"InitializePixelIteratorOptions", &InitializePixelIteratorOptions},
+	{"InitializePixelIteratorOptions", &InitializePixelIteratorOptions},
 	// {"InitializeSemaphore", &InitializeSemaphore},
-	// {"InsertImageInList", &InsertImageInList},
+	{"InsertImageInList", &InsertImageInList},
 	// {"InterlaceTypeToString", &InterlaceTypeToString},
 	// {"InterpolateColor", &InterpolateColor},
 	// {"InterpolateViewColor", &InterpolateViewColor},
@@ -503,7 +529,7 @@ var allApis = Apis{
 	// {"IsGlob", &IsGlob},
 	// {"IsGrayImage", &IsGrayImage},
 	{"IsImagesEqual", &IsImagesEqual},
-	// {"IsMagickConflict", &IsMagickConflict},
+	{"IsMagickConflict", &IsMagickConflict},
 	// {"IsMonochromeImage", &IsMonochromeImage},
 	// {"IsOpaqueImage", &IsOpaqueImage},
 	{"IsPaletteImage", &IsPaletteImage},
@@ -513,9 +539,9 @@ var allApis = Apis{
 	// {"IsWriteable", &IsWriteable},
 	// {"LZWEncode2Image", &LZWEncode2Image},
 	// {"LZWEncodeImage", &LZWEncodeImage},
-	// {"LevelImage", &LevelImage},
-	// {"LevelImageChannel", &LevelImageChannel},
-	// {"LiberateMagickResource", &LiberateMagickResource},
+	{"LevelImage", &LevelImage},
+	{"LevelImageChannel", &LevelImageChannel},
+	{"LiberateMagickResource", &LiberateMagickResource},
 	// {"LiberateMemory", &LiberateMemory},
 	// {"LiberateSemaphoreInfo", &LiberateSemaphoreInfo},
 	// {"LiberateTemporaryFile", &LiberateTemporaryFile},
@@ -523,10 +549,10 @@ var allApis = Apis{
 	// {"ListDelegateInfo", &ListDelegateInfo},
 	// {"ListFiles", &ListFiles},
 	// {"ListMagicInfo", &ListMagicInfo},
-	// {"ListMagickInfo", &ListMagickInfo},
-	// {"ListMagickResourceInfo", &ListMagickResourceInfo},
+	{"ListMagickInfo", &ListMagickInfo},
+	{"ListMagickResourceInfo", &ListMagickResourceInfo},
 	// {"ListModuleInfo", &ListModuleInfo},
-	// {"ListModuleMap", &ListModuleMap},
+	{"ListModuleMap", &ListModuleMap},
 	// {"ListTypeInfo", &ListTypeInfo},
 	// {"LocaleCompare", &LocaleCompare},
 	// {"LocaleLower", &LocaleLower},
@@ -537,31 +563,31 @@ var allApis = Apis{
 	// {"LogMagickEventList", &LogMagickEventList},
 	// {"MSBOrderLong", &MSBOrderLong},
 	// {"MSBOrderShort", &MSBOrderShort},
-	// {"MagickAllocFunctions", &MagickAllocFunctions},
+	{"MagickAllocFunctions", &MagickAllocFunctions},
 	// {"MagickArraySize", &MagickArraySize},
 	// {"MagickBitStreamInitializeRead", &MagickBitStreamInitializeRead},
 	// {"MagickBitStreamInitializeWrite", &MagickBitStreamInitializeWrite},
 	// {"MagickBitStreamMSBRead", &MagickBitStreamMSBRead},
 	// {"MagickBitStreamMSBWrite", &MagickBitStreamMSBWrite},
-	// {"MagickCloneMemory", &MagickCloneMemory},
+	{"MagickCloneMemory", &MagickCloneMemory},
 	// {"MagickCommand", &MagickCommand},
 	// {"MagickCompositeImageUnderColor", &MagickCompositeImageUnderColor},
 	{"MagickConfirmAccess", &MagickConfirmAccess},
 	// {"MagickConstrainColormapIndex", &MagickConstrainColormapIndex},
 	// {"MagickCreateDirectoryPath", &MagickCreateDirectoryPath},
-	// {"MagickError", &MagickError},
-	// {"MagickFatalError", &MagickFatalError},
+	{"MagickError", &MagickError},
+	{"MagickFatalError", &MagickFatalError},
 	// {"MagickFindRawImageMinMax", &MagickFindRawImageMinMax},
-	// {"MagickFree", &MagickFree},
-	// {"MagickFreeAligned", &MagickFreeAligned},
+	{"MagickFree", &MagickFree},
+	{"MagickFreeAligned", &MagickFreeAligned},
 	// {"MagickGetBitRevTable", &MagickGetBitRevTable},
 	// {"MagickGetMMUPageSize", &MagickGetMMUPageSize},
 	// {"MagickGetQuantumSamplesPerPixel", &MagickGetQuantumSamplesPerPixel},
-	// {"MagickMalloc", &MagickMalloc},
-	// {"MagickMallocAligned", &MagickMallocAligned},
-	// {"MagickMallocAlignedArray", &MagickMallocAlignedArray},
-	// {"MagickMallocArray", &MagickMallocArray},
-	// {"MagickMallocCleared", &MagickMallocCleared},
+	{"MagickMalloc", &MagickMalloc},
+	{"MagickMallocAligned", &MagickMallocAligned},
+	{"MagickMallocAlignedArray", &MagickMallocAlignedArray},
+	{"MagickMallocArray", &MagickMallocArray},
+	{"MagickMallocCleared", &MagickMallocCleared},
 	// {"MagickMapAccessEntry", &MagickMapAccessEntry},
 	// {"MagickMapAddEntry", &MagickMapAddEntry},
 	// {"MagickMapAllocateIterator", &MagickMapAllocateIterator},
@@ -580,13 +606,13 @@ var allApis = Apis{
 	// {"MagickMapIterateToBack", &MagickMapIterateToBack},
 	// {"MagickMapIterateToFront", &MagickMapIterateToFront},
 	// {"MagickMapRemoveEntry", &MagickMapRemoveEntry},
-	// {"MagickMonitor", &MagickMonitor},
-	// {"MagickMonitorFormatted", &MagickMonitorFormatted},
+	{"MagickMonitor", &MagickMonitor},
+	{"MagickMonitorFormatted", &MagickMonitorFormatted},
 	// {"MagickRandNewSeed", &MagickRandNewSeed},
 	// {"MagickRandReentrant", &MagickRandReentrant},
 	// {"MagickRandomInteger", &MagickRandomInteger},
 	// {"MagickRandomReal", &MagickRandomReal},
-	// {"MagickRealloc", &MagickRealloc},
+	{"MagickRealloc", &MagickRealloc},
 	// {"MagickReverseBits", &MagickReverseBits},
 	// {"MagickSceneFileName", &MagickSceneFileName},
 	{"MagickSetConfirmAccessHandler", &MagickSetConfirmAccessHandler},
@@ -603,38 +629,38 @@ var allApis = Apis{
 	// {"MagickSwabFloat", &MagickSwabFloat},
 	// {"MagickSwabUInt16", &MagickSwabUInt16},
 	// {"MagickSwabUInt32", &MagickSwabUInt32},
-	// {"MagickToMime", &MagickToMime},
+	{"MagickToMime", &MagickToMime},
 	// {"MagickTsdGetSpecific", &MagickTsdGetSpecific},
 	// {"MagickTsdKeyCreate", &MagickTsdKeyCreate},
 	// {"MagickTsdKeyCreate2", &MagickTsdKeyCreate2},
 	// {"MagickTsdKeyDelete", &MagickTsdKeyDelete},
 	// {"MagickTsdSetSpecific", &MagickTsdSetSpecific},
-	// {"MagickWarning", &MagickWarning},
+	{"MagickWarning", &MagickWarning},
 	// {"MagickWordStreamInitializeRead", &MagickWordStreamInitializeRead},
 	// {"MagickWordStreamInitializeWrite", &MagickWordStreamInitializeWrite},
 	// {"MagickWordStreamLSBRead", &MagickWordStreamLSBRead},
 	// {"MagickWordStreamLSBWrite", &MagickWordStreamLSBWrite},
 	// {"MagickWordStreamLSBWriteFlush", &MagickWordStreamLSBWriteFlush},
-	// {"MagnifyImage", &MagnifyImage},
+	{"MagnifyImage", &MagnifyImage},
 	// {"MapBlob", &MapBlob},
-	// {"MapImage", &MapImage},
-	// {"MapImages", &MapImages},
+	{"MapImage", &MapImage},
+	{"MapImages", &MapImages},
 	// {"MapModeToString", &MapModeToString},
-	// {"MatteFloodfillImage", &MatteFloodfillImage},
-	// {"MedianFilterImage", &MedianFilterImage},
+	{"MatteFloodfillImage", &MatteFloodfillImage},
+	{"MedianFilterImage", &MedianFilterImage},
 	// {"MetricTypeToString", &MetricTypeToString},
-	// {"MinifyImage", &MinifyImage},
+	{"MinifyImage", &MinifyImage},
 	{"ModifyImage", &ModifyImage},
 	// {"Modulate", &Modulate},
-	// {"ModulateImage", &ModulateImage},
+	{"ModulateImage", &ModulateImage},
 	// {"MogrifyImage", &MogrifyImage},
 	// {"MogrifyImageCommand", &MogrifyImageCommand},
 	// {"MogrifyImages", &MogrifyImages},
 	// {"MontageImageCommand", &MontageImageCommand},
-	// {"MontageImages", &MontageImages},
-	// {"MorphImages", &MorphImages},
-	// {"MosaicImages", &MosaicImages},
-	// {"MotionBlurImage", &MotionBlurImage},
+	{"MontageImages", &MontageImages},
+	{"MorphImages", &MorphImages},
+	{"MosaicImages", &MosaicImages},
+	{"MotionBlurImage", &MotionBlurImage},
 	// {"MultilineCensus", &MultilineCensus},
 	// {"NTElapsedTime", &NTElapsedTime},
 	// {"NTErrorHandler", &NTErrorHandler},
@@ -670,42 +696,42 @@ var allApis = Apis{
 	// {"NTreaddir", &NTreaddir},
 	// {"NTseekdir", &NTseekdir},
 	// {"NTtelldir", &NTtelldir},
-	// {"NegateImage", &NegateImage},
-	// {"NewImageList", &NewImageList},
+	{"NegateImage", &NegateImage},
+	{"NewImageList", &NewImageList},
 	// {"NextImageProfile", &NextImageProfile},
 	// {"NoiseTypeToString", &NoiseTypeToString},
-	// {"NormalizeImage", &NormalizeImage},
-	// {"OilPaintImage", &OilPaintImage},
-	// {"OpaqueImage", &OpaqueImage},
+	{"NormalizeImage", &NormalizeImage},
+	{"OilPaintImage", &OilPaintImage},
+	{"OpaqueImage", &OpaqueImage},
 	// {"OpenBlob", &OpenBlob},
-	// {"OpenCacheView", &OpenCacheView},
+	{"OpenCacheView", &OpenCacheView},
 	// {"OpenModule", &OpenModule},
 	// {"OpenModules", &OpenModules},
-	// {"OrderedDitherImage", &OrderedDitherImage},
+	{"OrderedDitherImage", &OrderedDitherImage},
 	// {"OrientationTypeToString", &OrientationTypeToString},
 	// {"PackbitsEncode2Image", &PackbitsEncode2Image},
 	// {"PackbitsEncodeImage", &PackbitsEncodeImage},
 	// {"PersistCache", &PersistCache},
 	{"PingBlob", &PingBlob},
 	{"PingImage", &PingImage},
-	// {"PixelIterateDualModify", &PixelIterateDualModify},
-	// {"PixelIterateDualNew", &PixelIterateDualNew},
-	// {"PixelIterateDualRead", &PixelIterateDualRead},
-	// {"PixelIterateMonoModify", &PixelIterateMonoModify},
-	// {"PixelIterateMonoRead", &PixelIterateMonoRead},
-	// {"PixelIterateTripleModify", &PixelIterateTripleModify},
-	// {"PixelIterateTripleNew", &PixelIterateTripleNew},
-	// {"PlasmaImage", &PlasmaImage},
+	{"PixelIterateDualModify", &PixelIterateDualModify},
+	{"PixelIterateDualNew", &PixelIterateDualNew},
+	{"PixelIterateDualRead", &PixelIterateDualRead},
+	{"PixelIterateMonoModify", &PixelIterateMonoModify},
+	{"PixelIterateMonoRead", &PixelIterateMonoRead},
+	{"PixelIterateTripleModify", &PixelIterateTripleModify},
+	{"PixelIterateTripleNew", &PixelIterateTripleNew},
+	{"PlasmaImage", &PlasmaImage},
 	// {"PopImagePixels", &PopImagePixels},
-	// {"PrependImageToList", &PrependImageToList},
-	// {"ProfileImage", &ProfileImage},
+	{"PrependImageToList", &PrependImageToList},
+	{"ProfileImage", &ProfileImage},
 	// {"PurgeTemporaryFiles", &PurgeTemporaryFiles},
 	// {"PushImagePixels", &PushImagePixels},
-	// {"QuantizeImage", &QuantizeImage},
-	// {"QuantizeImages", &QuantizeImages},
-	// {"QuantumOperatorImage", &QuantumOperatorImage},
+	{"QuantizeImage", &QuantizeImage},
+	{"QuantizeImages", &QuantizeImages},
+	{"QuantumOperatorImage", &QuantumOperatorImage},
 	// {"QuantumOperatorImageMultivalue", &QuantumOperatorImageMultivalue},
-	// {"QuantumOperatorRegionImage", &QuantumOperatorRegionImage},
+	{"QuantumOperatorRegionImage", &QuantumOperatorRegionImage},
 	// {"QuantumOperatorToString", &QuantumOperatorToString},
 	// {"QuantumSampleTypeToString", &QuantumSampleTypeToString},
 	// {"QuantumTypeToString", &QuantumTypeToString},
@@ -713,7 +739,7 @@ var allApis = Apis{
 	// {"QueryColorname", &QueryColorname},
 	// {"RGBTransformImage", &RGBTransformImage},
 	{"RaiseImage", &RaiseImage},
-	// {"RandomChannelThresholdImage", &RandomChannelThresholdImage},
+	{"RandomChannelThresholdImage", &RandomChannelThresholdImage},
 	// {"ReacquireMemory", &ReacquireMemory},
 	// {"ReadBlob", &ReadBlob},
 	// {"ReadBlobByte", &ReadBlobByte},
@@ -737,38 +763,38 @@ var allApis = Apis{
 	// {"ReadBlobZC", &ReadBlobZC},
 	{"ReadImage", &ReadImage},
 	{"ReadInlineImage", &ReadInlineImage},
-	// {"ReduceNoiseImage", &ReduceNoiseImage},
+	{"ReduceNoiseImage", &ReduceNoiseImage},
 	{"ReferenceBlob", &ReferenceBlob},
 	{"ReferenceImage", &ReferenceImage},
-	// {"RegisterMagickInfo", &RegisterMagickInfo},
+	{"RegisterMagickInfo", &RegisterMagickInfo},
 	// {"RegisterStaticModules", &RegisterStaticModules},
 	{"RemoveDefinitions", &RemoveDefinitions},
-	// {"RemoveFirstImageFromList", &RemoveFirstImageFromList},
-	// {"RemoveLastImageFromList", &RemoveLastImageFromList},
+	{"RemoveFirstImageFromList", &RemoveFirstImageFromList},
+	{"RemoveLastImageFromList", &RemoveLastImageFromList},
 	{"ReplaceImageColormap", &ReplaceImageColormap},
-	// {"ReplaceImageInList", &ReplaceImageInList},
+	{"ReplaceImageInList", &ReplaceImageInList},
 	{"ResetImagePage", &ResetImagePage},
 	// {"ResetTimer", &ResetTimer},
 	// {"ResizeFilterToString", &ResizeFilterToString},
-	// {"ResizeImage", &ResizeImage},
-	// {"ReverseImageList", &ReverseImageList},
-	// {"RollImage", &RollImage},
-	// {"RotateImage", &RotateImage},
-	// {"SampleImage", &SampleImage},
-	// {"ScaleImage", &ScaleImage},
+	{"ResizeImage", &ResizeImage},
+	{"ReverseImageList", &ReverseImageList},
+	{"RollImage", &RollImage},
+	{"RotateImage", &RotateImage},
+	{"SampleImage", &SampleImage},
+	{"ScaleImage", &ScaleImage},
 	// {"SeekBlob", &SeekBlob},
-	// {"SegmentImage", &SegmentImage},
+	{"SegmentImage", &SegmentImage},
 	{"SetBlobClosable", &SetBlobClosable},
 	{"SetBlobTemporary", &SetBlobTemporary},
 	// {"SetCacheView", &SetCacheView},
-	// {"SetCacheViewPixels", &SetCacheViewPixels},
+	{"SetCacheViewPixels", &SetCacheViewPixels},
 	// {"SetClientFilename", &SetClientFilename},
 	// {"SetClientName", &SetClientName},
 	// {"SetClientPath", &SetClientPath},
 	// {"SetDelegateInfo", &SetDelegateInfo},
-	// {"SetErrorHandler", &SetErrorHandler},
-	// {"SetExceptionInfo", &SetExceptionInfo},
-	// {"SetFatalErrorHandler", &SetFatalErrorHandler},
+	{"SetErrorHandler", &SetErrorHandler},
+	{"SetExceptionInfo", &SetExceptionInfo},
+	{"SetFatalErrorHandler", &SetFatalErrorHandler},
 	// {"SetGeometry", &SetGeometry},
 	{"SetImage", &SetImage},
 	{"SetImageAttribute", &SetImageAttribute},
@@ -779,31 +805,31 @@ var allApis = Apis{
 	{"SetImageDepth", &SetImageDepth},
 	// {"SetImageInfo", &SetImageInfo},
 	{"SetImageOpacity", &SetImageOpacity},
-	// {"SetImagePixels", &SetImagePixels},
-	// {"SetImagePixelsEx", &SetImagePixelsEx},
-	// {"SetImageProfile", &SetImageProfile},
+	{"SetImagePixels", &SetImagePixels},
+	{"SetImagePixelsEx", &SetImagePixelsEx},
+	{"SetImageProfile", &SetImageProfile},
 	{"SetImageType", &SetImageType},
-	// {"SetImageVirtualPixelMethod", &SetImageVirtualPixelMethod},
+	{"SetImageVirtualPixelMethod", &SetImageVirtualPixelMethod},
 	// {"SetLogEventMask", &SetLogEventMask},
 	// {"SetLogFormat", &SetLogFormat},
-	// {"SetMagickInfo", &SetMagickInfo},
-	// {"SetMagickRegistry", &SetMagickRegistry},
-	// {"SetMagickResourceLimit", &SetMagickResourceLimit},
-	// {"SetMonitorHandler", &SetMonitorHandler},
-	// {"SetWarningHandler", &SetWarningHandler},
-	// {"ShadeImage", &ShadeImage},
-	// {"SharpenImage", &SharpenImage},
-	// {"SharpenImageChannel", &SharpenImageChannel},
-	// {"ShaveImage", &ShaveImage},
-	// {"ShearImage", &ShearImage},
-	// {"SignatureImage", &SignatureImage},
-	// {"SolarizeImage", &SolarizeImage},
+	{"SetMagickInfo", &SetMagickInfo},
+	{"SetMagickRegistry", &SetMagickRegistry},
+	{"SetMagickResourceLimit", &SetMagickResourceLimit},
+	{"SetMonitorHandler", &SetMonitorHandler},
+	{"SetWarningHandler", &SetWarningHandler},
+	{"ShadeImage", &ShadeImage},
+	{"SharpenImage", &SharpenImage},
+	{"SharpenImageChannel", &SharpenImageChannel},
+	{"ShaveImage", &ShaveImage},
+	{"ShearImage", &ShearImage},
+	{"SignatureImage", &SignatureImage},
+	{"SolarizeImage", &SolarizeImage},
 	// {"SortColormapByIntensity", &SortColormapByIntensity},
-	// {"SpliceImageIntoList", &SpliceImageIntoList},
-	// {"SplitImageList", &SplitImageList},
-	// {"SpreadImage", &SpreadImage},
-	// {"SteganoImage", &SteganoImage},
-	// {"StereoImage", &StereoImage},
+	{"SpliceImageIntoList", &SpliceImageIntoList},
+	{"SplitImageList", &SplitImageList},
+	{"SpreadImage", &SpreadImage},
+	{"SteganoImage", &SteganoImage},
+	{"StereoImage", &StereoImage},
 	// {"StorageTypeToString", &StorageTypeToString},
 	// {"StretchTypeToString", &StretchTypeToString},
 	// {"StringToArgv", &StringToArgv},
@@ -830,40 +856,40 @@ var allApis = Apis{
 	{"StripImage", &StripImage},
 	// {"StyleTypeToString", &StyleTypeToString},
 	// {"SubstituteString", &SubstituteString},
-	// {"SwirlImage", &SwirlImage},
+	{"SwirlImage", &SwirlImage},
 	// {"SyncCacheView", &SyncCacheView},
-	// {"SyncCacheViewPixels", &SyncCacheViewPixels},
+	{"SyncCacheViewPixels", &SyncCacheViewPixels},
 	// {"SyncImage", &SyncImage},
-	// {"SyncImagePixels", &SyncImagePixels},
-	// {"SyncImagePixelsEx", &SyncImagePixelsEx},
+	{"SyncImagePixels", &SyncImagePixels},
+	{"SyncImagePixelsEx", &SyncImagePixelsEx},
 	// {"SyncNextImageInList", &SyncNextImageInList},
 	// {"SystemCommand", &SystemCommand},
 	// {"TellBlob", &TellBlob},
-	// {"TextureImage", &TextureImage},
-	// {"ThresholdImage", &ThresholdImage},
-	// {"ThrowException", &ThrowException},
-	// {"ThrowLoggedException", &ThrowLoggedException},
-	// {"ThumbnailImage", &ThumbnailImage},
+	{"TextureImage", &TextureImage},
+	{"ThresholdImage", &ThresholdImage},
+	{"ThrowException", &ThrowException},
+	{"ThrowLoggedException", &ThrowLoggedException},
+	{"ThumbnailImage", &ThumbnailImage},
 	// {"TimeImageCommand", &TimeImageCommand},
 	// {"Tokenizer", &Tokenizer},
 	// {"TransformColorspace", &TransformColorspace},
 	// {"TransformHSL", &TransformHSL},
 	// {"TransformHWB", &TransformHWB},
-	// {"TransformImage", &TransformImage},
+	{"TransformImage", &TransformImage},
 	// {"TransformRGBImage", &TransformRGBImage},
-	// {"TransformSignature", &TransformSignature},
+	{"TransformSignature", &TransformSignature},
 	// {"TranslateText", &TranslateText},
 	// {"TranslateTextEx", &TranslateTextEx},
-	// {"TransparentImage", &TransparentImage},
+	{"TransparentImage", &TransparentImage},
 	// {"UnlockSemaphoreInfo", &UnlockSemaphoreInfo},
 	// {"UnmapBlob", &UnmapBlob},
-	// {"UnregisterMagickInfo", &UnregisterMagickInfo},
+	{"UnregisterMagickInfo", &UnregisterMagickInfo},
 	// {"UnregisterStaticModules", &UnregisterStaticModules},
-	// {"UnsharpMaskImage", &UnsharpMaskImage},
-	// {"UnsharpMaskImageChannel", &UnsharpMaskImageChannel},
-	// {"UpdateSignature", &UpdateSignature},
-	// {"WaveImage", &WaveImage},
-	// {"WhiteThresholdImage", &WhiteThresholdImage},
+	{"UnsharpMaskImage", &UnsharpMaskImage},
+	{"UnsharpMaskImageChannel", &UnsharpMaskImageChannel},
+	{"UpdateSignature", &UpdateSignature},
+	{"WaveImage", &WaveImage},
+	{"WhiteThresholdImage", &WhiteThresholdImage},
 	// {"WriteBlob", &WriteBlob},
 	// {"WriteBlobByte", &WriteBlobByte},
 	// {"WriteBlobFile", &WriteBlobFile},
@@ -880,9 +906,9 @@ var allApis = Apis{
 	// {"_Gm_convert_fp24_to_fp32", &Gm_convert_fp24_to_fp32},
 	// {"_Gm_convert_fp32_to_fp16", &Gm_convert_fp32_to_fp16},
 	// {"_Gm_convert_fp32_to_fp24", &Gm_convert_fp32_to_fp24},
-	// {"_MagickError", &MagickError2},
-	// {"_MagickFatalError", &MagickFatalError2},
-	// {"_MagickWarning", &MagickWarning2},
+	{"_MagickError", &MagickError2},
+	{"_MagickFatalError", &MagickFatalError2},
+	{"_MagickWarning", &MagickWarning2},
 }
 
 var allData = Data{
@@ -1784,6 +1810,219 @@ type TypeMetric struct {
 	UnderlineThickness float64
 }
 
+type QuantumType Enum
+
+const (
+	UndefinedQuantum QuantumType = iota
+	IndexQuantum
+	GrayQuantum
+	IndexAlphaQuantum
+	GrayAlphaQuantum
+	RedQuantum
+	CyanQuantum
+	GreenQuantum
+	YellowQuantum
+	BlueQuantum
+	MagentaQuantum
+	AlphaQuantum
+	BlackQuantum
+	RGBQuantum
+	RGBAQuantum
+	CMYKQuantum
+	CMYKAQuantum
+	CIEYQuantum
+	CIEXYZQuantum
+)
+
+type ExportPixelAreaOptions struct {
+	SampleType                     QuantumSampleType
+	DoubleMinvalue, DoubleMaxvalue float64
+	GrayscaleMiniswhite            MagickBooleanType
+	PadBytes                       Size
+	PadValue                       byte
+	Endian                         EndianType
+	Signature                      Size
+}
+
+type QuantumSampleType Enum
+
+const (
+	UndefinedQuantumSampleType QuantumSampleType = iota
+	UnsignedQuantumSampleType
+	FloatQuantumSampleType
+)
+
+type ExportPixelAreaInfo struct {
+	BytesExported Size
+}
+
+type ImportPixelAreaInfo struct {
+	BytesImported Size
+}
+
+type ImportPixelAreaOptions struct {
+	SampleType                     QuantumSampleType
+	DoubleMinvalue, DoubleMaxvalue float64
+	GrayscaleMiniswhite            MagickBooleanType
+	Endian                         EndianType
+	Signature                      Size
+}
+
+type MagickInfo struct {
+	Previous           *MagickInfo
+	Next               *MagickInfo
+	Name               *VString
+	Description_       *VString
+	Note               *VString
+	Version            *VString
+	Module             *VString
+	Decoder_           *DecoderHandler
+	Encoder_           *EncoderHandler
+	Magick             *MagickHandler
+	ClientData         *Void
+	Adjoin_            MagickBooleanType
+	Raw                MagickBooleanType
+	Stealth            MagickBooleanType
+	SeekableStream_    MagickBooleanType
+	BlobSupport_       MagickBooleanType
+	ThreadSupport_     MagickStatusType
+	CoderClass         CoderClass
+	ExtensionTreatment ExtensionTreatment
+	Signature          Size
+}
+
+type CoderClass Enum
+
+const (
+	UnstableCoderClass CoderClass = iota
+	StableCoderClass
+	PrimaryCoderClass
+)
+
+type ExtensionTreatment Enum
+
+const (
+	HintExtensionTreatment ExtensionTreatment = iota
+	ObeyExtensionTreatment
+	IgnoreExtensionTreatment
+)
+
+type MontageInfo struct {
+	Geometry        *VString
+	Tile            *VString
+	Title           *VString
+	Frame           *VString
+	Texture         *VString
+	Font            *VString
+	Pointsize       float64
+	BorderWidth     Size
+	Shadow          MagickBooleanType
+	Fill            PixelPacket
+	Stroke          PixelPacket
+	BackgroundColor PixelPacket
+	BorderColor     PixelPacket
+	MatteColor      PixelPacket
+	Gravity         GravityType
+	Filename        [MaxTextExtent]Char
+	Signature       Size
+}
+
+type QuantumOperator Enum
+
+const (
+	UndefinedQuantumOp QuantumOperator = iota
+	AddQuantumOp
+	AndQuantumOp
+	AssignQuantumOp
+	DivideQuantumOp
+	LShiftQuantumOp
+	MultiplyQuantumOp
+	OrQuantumOp
+	RShiftQuantumOp
+	SubtractQuantumOp
+	ThresholdQuantumOp
+	ThresholdBlackQuantumOp
+	ThresholdWhiteQuantumOp
+	XorQuantumOp
+	NoiseGaussianQuantumOp
+	NoiseImpulseQuantumOp
+	NoiseLaplacianQuantumOp
+	NoiseMultiplicativeQuantumOp
+	NoisePoissonQuantumOp
+	NoiseUniformQuantumOp
+	NegateQuantumOp
+	GammaQuantumOp
+	DepthQuantumOp
+	LogQuantumOp
+	MaxQuantumOp
+	MinQuantumOp
+	PowQuantumOp
+	NoiseRandomQuantumOp
+)
+
+type VirtualPixelMethod Enum
+
+const (
+	UndefinedVirtualPixelMethod VirtualPixelMethod = iota
+	ConstantVirtualPixelMethod
+	EdgeVirtualPixelMethod
+	MirrorVirtualPixelMethod
+	TileVirtualPixelMethod
+)
+
+type PixelIteratorOptions struct {
+	MaxThreads int
+	Signature  Size
+}
+
+type QuantizeInfo struct {
+	NumberColors Size
+	TreeDepth    Size
+	Dither       MagickBooleanType
+	Colorspace   ColorspaceType
+	MeasureError MagickBooleanType
+	Signature    Size
+}
+
+type RegistryType Enum
+
+const (
+	UndefinedRegistryType RegistryType = iota
+	ImageRegistryType
+	ImageInfoRegistryType
+)
+
+type ResourceType Enum
+
+const (
+	UndefinedResource ResourceType = iota
+	DiskResource
+	FileResource
+	MapResource
+	MemoryResource
+	PixelsResource
+	ThreadResource
+)
+
+type SignatureInfo struct {
+	Digest              [8]Size
+	LowOrder, HighOrder Size
+	Offset              SSize
+	Message             [SignatureSize]byte
+}
+
+type ImageStatistics struct {
+	red, green, blue, opacity ImageChannelStatistics
+}
+
+type ImageChannelStatistics struct {
+	Maximum,
+	Minimum,
+	Mean,
+	StandardDeviation,
+	Variance float64
+}
+
 // Annotate
 
 var AnnotateImage func(i *Image, drawInfo *DrawInfo) bool
@@ -2000,7 +2239,7 @@ func (i *Image) ReplaceImageColormap(colormap *PixelPacket, colors uint) bool {
 
 // Compare
 
-var DifferenceImage func(i, compareImage *Image, difference_options *DifferenceImageOptions, exception *ExceptionInfo) *Image
+var DifferenceImage func(i, compareImage *Image, differenceOptions *DifferenceImageOptions, exception *ExceptionInfo) *Image
 
 func (i *Image) Difference(compareImage *Image, differenceOptions *DifferenceImageOptions, exception *ExceptionInfo) *Image {
 	return DifferenceImage(i, compareImage, differenceOptions, exception)
@@ -2116,149 +2355,6 @@ func (i *Image) Describe(file *FILE, verbose bool) bool {
 	return DescribeImage(i, file, verbose)
 }
 
-// Image
-
-var AccessDefinition func(i *ImageInfo, magick, key string) string
-
-func (i *ImageInfo) AccessDefinition(magick, key string) string {
-	return AccessDefinition(i, magick, key)
-}
-
-var AddDefinition func(i *ImageInfo, magick, key, value string, exception *ExceptionInfo) bool
-
-func (i *ImageInfo) AddDefinition(magick, key, value string, exception *ExceptionInfo) bool {
-	return AddDefinition(i, magick, key, value, exception)
-}
-
-//NOTE(t): Documentation wrong (missing exception)
-var AddDefinitions func(i *ImageInfo, options string, exception *ExceptionInfo) bool
-
-func (i *ImageInfo) AddDefinitions(options string, exception *ExceptionInfo) bool {
-	return AddDefinitions(i, options, exception)
-}
-
-var AllocateImage func(i *ImageInfo) *Image
-
-func (i *ImageInfo) AllocateImage() *Image { return AllocateImage(i) }
-
-var AllocateNextImage func(i *ImageInfo, image *Image)
-
-func (i *ImageInfo) AllocateNextImage(image *Image) { AllocateNextImage(i, image) }
-
-var AnimateImages func(i *ImageInfo, images *Image) bool
-
-func (i *ImageInfo) AnimateImages(images *Image) bool { return AnimateImages(i, images) }
-
-var AppendImages func(i *Image, stack bool, exception *ExceptionInfo) *Image
-
-func (i *Image) AppendImages(stack bool, exception *ExceptionInfo) *Image {
-	return AppendImages(i, stack, exception)
-}
-
-var CatchImageException func(i *Image) ExceptionType
-
-func (i *Image) CatchException() ExceptionType { return CatchImageException(i) }
-
-var ClipPathImage func(i *Image, pathname string, inside bool) bool
-
-func (i *Image) ClipPathImage(pathname string, inside bool) bool {
-	return ClipPathImage(i, pathname, inside)
-}
-
-var CloneImage func(i *Image, columns, rows Size, orphan bool, exception *ExceptionInfo) *Image
-
-func (i *Image) Clone(columns, rows Size, orphan bool, exception *ExceptionInfo) *Image {
-	return CloneImage(i, columns, rows, orphan, exception)
-}
-
-var CloneImageInfo func(i *ImageInfo) *ImageInfo
-
-func (i *ImageInfo) CloneInfo() *ImageInfo { return CloneImageInfo(i) }
-
-var DestroyImage func(i *Image) *Image
-
-func (i *Image) Destroy() *Image { return DestroyImage(i) }
-
-var DestroyImageInfo func(i *ImageInfo) *ImageInfo
-
-func (i *ImageInfo) Destroy() *ImageInfo { return DestroyImageInfo(i) }
-
-var DisplayImages func(i *ImageInfo, images *Image) bool
-
-func (i *ImageInfo) DisplayImages(images *Image) bool { return DisplayImages(i, images) }
-
-var GetImageClipMask func(i *Image, exception *ExceptionInfo) *Image
-
-func (i *Image) ClipMask(exception *ExceptionInfo) *Image {
-	return GetImageClipMask(i, exception)
-}
-
-var GetImageException func(i *Image, exception *ExceptionInfo)
-
-func (i *Image) Exception(exception *ExceptionInfo) { GetImageException(i, exception) }
-
-var GetImageGeometry func(i *Image, geometry string, sizeToFit uint, regionInfo *RectangleInfo) int
-
-func (i *Image) Geometry(geometry string, sizeToFit uint, regionInfo *RectangleInfo) int {
-	return GetImageGeometry(i, geometry, sizeToFit, regionInfo)
-}
-
-var GetImageInfo func(i *ImageInfo)
-
-func (i *ImageInfo) Get() { GetImageInfo(i) }
-
-var IsTaintImage func(i *Image) bool
-
-func (i *Image) Taint() bool { return IsTaintImage(i) }
-
-var ModifyImage func(image **Image, exception *ExceptionInfo) bool
-
-var ReferenceImage func(i *Image) *Image
-
-func (i *Image) Reference() *Image { return ReferenceImage(i) }
-
-var RemoveDefinitions func(i *ImageInfo, options string) bool
-
-func (i *ImageInfo) RemoveDefinitions(options string) bool { return RemoveDefinitions(i, options) }
-
-var ResetImagePage func(i *Image, page string) bool
-
-func (i *Image) ResetPage(page string) bool { return ResetImagePage(i, page) }
-
-var SetImage func(i *Image, opacity Quantum)
-
-func (i *Image) SetImage(opacity Quantum) { SetImage(i, opacity) }
-
-var SetImageColor func(i *Image, color *PixelPacket) bool
-
-func (i *Image) SetColor(color *PixelPacket) bool { return SetImageColor(i, color) }
-
-var SetImageColorRegion func(i *Image, x, y SSize, width, height Size, pixel *PixelPacket) bool
-
-func (i *Image) SetColorRegion(x, y SSize, width, height Size, pixel *PixelPacket) bool {
-	return SetImageColorRegion(i, x, y, width, height, pixel)
-}
-
-var SetImageClipMask func(i *Image, clipMask *Image) bool
-
-func (i *Image) SetClipMask(clipMask *Image) bool { return SetImageClipMask(i, clipMask) }
-
-var SetImageDepth func(i *Image, depth Size) bool
-
-func (i *Image) SetDepth(depth Size) bool { return SetImageDepth(i, depth) }
-
-var SetImageOpacity func(i *Image, opacity Quantum) bool
-
-func (i *Image) SetOpacity(opacity Quantum) bool { return SetImageOpacity(i, opacity) }
-
-var SetImageType func(i *Image, imageType ImageType) bool
-
-func (i *Image) SetType(imageType ImageType) bool { return SetImageType(i, imageType) }
-
-var StripImage func(i *Image) bool
-
-func (i *Image) Strip() bool { return StripImage(i) }
-
 // Draw
 
 var DrawAnnotation func(d *DrawContext, x, y float64, text *byte)
@@ -2275,7 +2371,7 @@ var DrawArc func(d *DrawContext, sx, sy, ex, ey, sd, ed float64)
 
 func (d *DrawContext) Arc(sx, sy, ex, ey, sd, ed float64) { DrawArc(d, sx, sy, ex, ey, sd, ed) }
 
-var DrawBezier func(d *DrawContext, num_coords Size, coordinates *PointInfo)
+var DrawBezier func(d *DrawContext, numCoords Size, coordinates *PointInfo)
 
 func (d *DrawContext) Bezier(numCoords Size, coordinates *PointInfo) {
 	DrawBezier(d, numCoords, coordinates)
@@ -2297,17 +2393,17 @@ var DrawGetClipUnits func(d *DrawContext) ClipPathUnits
 
 func (d *DrawContext) ClipUnits() ClipPathUnits { return DrawGetClipUnits(d) }
 
-var DrawSetClipPath func(d *DrawContext, clip_path string)
+var DrawSetClipPath func(d *DrawContext, clipPath string)
 
-func (d *DrawContext) SetClipPath(clip_path string) { DrawSetClipPath(d, clip_path) }
+func (d *DrawContext) SetClipPath(clipPath string) { DrawSetClipPath(d, clipPath) }
 
-var DrawSetClipRule func(d *DrawContext, fill_rule FillRule)
+var DrawSetClipRule func(d *DrawContext, fillRule FillRule)
 
-func (d *DrawContext) SetClipRule(fill_rule FillRule) { DrawSetClipRule(d, fill_rule) }
+func (d *DrawContext) SetClipRule(fillRule FillRule) { DrawSetClipRule(d, fillRule) }
 
-var DrawSetClipUnits func(d *DrawContext, clip_units ClipPathUnits)
+var DrawSetClipUnits func(d *DrawContext, clipUnits ClipPathUnits)
 
-func (d *DrawContext) SetClipUnits(clip_units ClipPathUnits) { DrawSetClipUnits(d, clip_units) }
+func (d *DrawContext) SetClipUnits(clipUnits ClipPathUnits) { DrawSetClipUnits(d, clipUnits) }
 
 var DrawColor func(d *DrawContext, x, y float64, paintMethod PaintMethod)
 
@@ -2936,3 +3032,880 @@ func (i *Image) Negate(grayscale bool) bool { return NegateImage(i, grayscale) }
 var NormalizeImage func(i *Image) bool
 
 func (i *Image) Normalize() bool { return NormalizeImage(i) }
+
+// Error
+
+var CatchException func(e *ExceptionInfo)
+
+func (e *ExceptionInfo) Catch() { CatchException(e) }
+
+var CopyException func(e *ExceptionInfo, original *ExceptionInfo)
+
+func (e *ExceptionInfo) Copy(original *ExceptionInfo) { CopyException(e, original) }
+
+var DestroyExceptionInfo func(e *ExceptionInfo) *ExceptionInfo
+
+func (e *ExceptionInfo) Destroy() *ExceptionInfo { return DestroyExceptionInfo(e) }
+
+var GetExceptionInfo func(e *ExceptionInfo)
+
+func (e *ExceptionInfo) Get() { GetExceptionInfo(e) }
+
+var GetLocaleExceptionMessage func(severity ExceptionType, tag string) string
+
+var MagickError func(err ExceptionType, reason, description string)
+
+//MagickError2 is the export name for GraphhicsMagick name _MagickError
+var MagickError2 func(err ExceptionType, reason, description string)
+
+var MagickFatalError func(err ExceptionType, reason, description string)
+
+//MagickFatalError2 is the export name for GraphhicsMagick name _MagickFatalError
+var MagickFatalError2 func(err ExceptionType, reason, description string)
+
+var MagickWarning func(warning ExceptionType, reason, description string)
+
+//MagickWarning2 is the export name for GraphhicsMagick name _MagickWarning
+var MagickWarning2 func(warning ExceptionType, reason, description string)
+
+var SetErrorHandler func(handler ErrorHandler) ErrorHandler
+
+type ErrorHandler func(ExceptionType, string, string)
+
+var SetExceptionInfo func(e *ExceptionInfo, severity ExceptionType)
+
+func (e *ExceptionInfo) Set(severity ExceptionType) { SetExceptionInfo(e, severity) }
+
+var SetFatalErrorHandler func(handler FatalErrorHandler) FatalErrorHandler
+
+type FatalErrorHandler func(ExceptionType, string, string)
+
+var SetWarningHandler func(handler WarningHandler) WarningHandler
+
+type WarningHandler func(ExceptionType, string, string)
+
+var ThrowException func(e *ExceptionInfo, severity ExceptionType, reason, description string)
+
+func (e *ExceptionInfo) Throw(severity ExceptionType, reason, description string) {
+	ThrowException(e, severity, reason, description)
+}
+
+var ThrowLoggedException func(e *ExceptionInfo, severity ExceptionType, reason, description, module, function string, line Size)
+
+func (e *ExceptionInfo) ThrowLogged(severity ExceptionType, reason, description, module, function string, line Size) {
+	ThrowLoggedException(e, severity, reason, description, module, function, line)
+}
+
+// Export
+
+var ExportImagePixelArea func(i *Image, quantumType QuantumType, quantumSize uint, destination *byte, options *ExportPixelAreaOptions, exportInfo *ExportPixelAreaInfo) bool
+
+func (i *Image) ExportPixelArea(quantumType QuantumType, quantumSize uint, destination *byte, options *ExportPixelAreaOptions, exportInfo *ExportPixelAreaInfo) bool {
+	return ExportImagePixelArea(i, quantumType, quantumSize, destination, options, exportInfo)
+}
+
+var ExportViewPixelArea func(v *ViewInfo, quantumType QuantumType, quantumSize uint, destination *byte, options *ExportPixelAreaOptions, exportInfo *ExportPixelAreaInfo) bool
+
+func (v *ViewInfo) ExportPixelArea(quantumType QuantumType, quantumSize uint, destination *byte, options *ExportPixelAreaOptions, exportInfo *ExportPixelAreaInfo) bool {
+	return ExportViewPixelArea(v, quantumType, quantumSize, destination, options, exportInfo)
+}
+
+var ExportPixelAreaOptionsInit func(options *ExportPixelAreaOptions)
+
+// Fx
+
+var CharcoalImage func(i *Image, radius, sigma float64, exception *ExceptionInfo) *Image
+
+func (i *Image) Charcoal(radius, sigma float64, exception *ExceptionInfo) *Image {
+	return CharcoalImage(i, radius, sigma, exception)
+}
+
+var ColorizeImage func(i *Image, opacity string, colorize PixelPacket, exception *ExceptionInfo) *Image
+
+func (i *Image) Colorize(opacity string, colorize PixelPacket, exception *ExceptionInfo) *Image {
+	return ColorizeImage(i, opacity, colorize, exception)
+}
+
+var ColorMatrixImage func(i *Image, colorMatrix []float64, exception *ExceptionInfo) *Image
+
+func (i *Image) ColorMatrix(colorMatrix []float64, exception *ExceptionInfo) *Image {
+	return ColorMatrixImage(i, colorMatrix, exception)
+}
+
+var ImplodeImage func(i *Image, amount float64, exception *ExceptionInfo) *Image
+
+func (i *Image) Implode(amount float64, exception *ExceptionInfo) *Image {
+	return ImplodeImage(i, amount, exception)
+}
+
+var MorphImages func(i *Image, numberFrames Size, exception *ExceptionInfo) *Image
+
+func (i *Image) MorphImages(numberFrames Size, exception *ExceptionInfo) *Image {
+	return MorphImages(i, numberFrames, exception)
+}
+
+var OilPaintImage func(i *Image, radius float64, exception *ExceptionInfo) *Image
+
+func (i *Image) OilPaint(radius float64, exception *ExceptionInfo) *Image {
+	return OilPaintImage(i, radius, exception)
+}
+
+var SolarizeImage func(i *Image, threshold float64) bool
+
+func (i *Image) Solarize(threshold float64) bool { return SolarizeImage(i, threshold) }
+
+var SteganoImage func(i *Image, watermark *Image, exception *ExceptionInfo) *Image
+
+func (i *Image) Stegano(watermark *Image, exception *ExceptionInfo) *Image {
+	return SteganoImage(i, watermark, exception)
+}
+
+var StereoImage func(i *Image, offsetImage *Image, exception *ExceptionInfo) *Image
+
+func (i *Image) Stereo(offsetImage *Image, exception *ExceptionInfo) *Image {
+	return StereoImage(i, offsetImage, exception)
+}
+
+var SwirlImage func(i *Image, degrees float64, exception *ExceptionInfo) *Image
+
+func (i *Image) Swirl(degrees float64, exception *ExceptionInfo) *Image {
+	return SwirlImage(i, degrees, exception)
+}
+
+var WaveImage func(i *Image, amplitude, waveLength float64, exception *ExceptionInfo) *Image
+
+func (i *Image) Wave(amplitude, waveLength float64, exception *ExceptionInfo) *Image {
+	return WaveImage(i, amplitude, waveLength, exception)
+}
+
+// Hald CLUT
+
+var HaldClutImage func(i, haldImage *Image) bool
+
+func (i *Image) HaldClut(haldImage *Image) bool { return HaldClutImage(i, haldImage) }
+
+// Image
+
+var AccessDefinition func(i *ImageInfo, magick, key string) string
+
+func (i *ImageInfo) AccessDefinition(magick, key string) string {
+	return AccessDefinition(i, magick, key)
+}
+
+var AddDefinition func(i *ImageInfo, magick, key, value string, exception *ExceptionInfo) bool
+
+func (i *ImageInfo) AddDefinition(magick, key, value string, exception *ExceptionInfo) bool {
+	return AddDefinition(i, magick, key, value, exception)
+}
+
+//NOTE(t): Documentation wrong (missing exception)
+var AddDefinitions func(i *ImageInfo, options string, exception *ExceptionInfo) bool
+
+func (i *ImageInfo) AddDefinitions(options string, exception *ExceptionInfo) bool {
+	return AddDefinitions(i, options, exception)
+}
+
+var AllocateImage func(i *ImageInfo) *Image
+
+func (i *ImageInfo) AllocateImage() *Image { return AllocateImage(i) }
+
+var AllocateNextImage func(i *ImageInfo, image *Image)
+
+func (i *ImageInfo) AllocateNextImage(image *Image) { AllocateNextImage(i, image) }
+
+var AnimateImages func(i *ImageInfo, images *Image) bool
+
+func (i *ImageInfo) AnimateImages(images *Image) bool { return AnimateImages(i, images) }
+
+var AppendImages func(i *Image, stack bool, exception *ExceptionInfo) *Image
+
+func (i *Image) AppendImages(stack bool, exception *ExceptionInfo) *Image {
+	return AppendImages(i, stack, exception)
+}
+
+var CatchImageException func(i *Image) ExceptionType
+
+func (i *Image) CatchException() ExceptionType { return CatchImageException(i) }
+
+var ClipPathImage func(i *Image, pathname string, inside bool) bool
+
+func (i *Image) ClipPathImage(pathname string, inside bool) bool {
+	return ClipPathImage(i, pathname, inside)
+}
+
+var CloneImage func(i *Image, columns, rows Size, orphan bool, exception *ExceptionInfo) *Image
+
+func (i *Image) Clone(columns, rows Size, orphan bool, exception *ExceptionInfo) *Image {
+	return CloneImage(i, columns, rows, orphan, exception)
+}
+
+var CloneImageInfo func(i *ImageInfo) *ImageInfo
+
+func (i *ImageInfo) CloneInfo() *ImageInfo { return CloneImageInfo(i) }
+
+var DestroyImage func(i *Image) *Image
+
+func (i *Image) Destroy() *Image { return DestroyImage(i) }
+
+var DestroyImageInfo func(i *ImageInfo) *ImageInfo
+
+func (i *ImageInfo) Destroy() *ImageInfo { return DestroyImageInfo(i) }
+
+var DisplayImages func(i *ImageInfo, images *Image) bool
+
+func (i *ImageInfo) DisplayImages(images *Image) bool { return DisplayImages(i, images) }
+
+var GetImageClipMask func(i *Image, exception *ExceptionInfo) *Image
+
+func (i *Image) ClipMask(exception *ExceptionInfo) *Image {
+	return GetImageClipMask(i, exception)
+}
+
+var GetImageException func(i *Image, exception *ExceptionInfo)
+
+func (i *Image) Exception(exception *ExceptionInfo) { GetImageException(i, exception) }
+
+var GetImageGeometry func(i *Image, geometry string, sizeToFit uint, regionInfo *RectangleInfo) int
+
+func (i *Image) Geometry(geometry string, sizeToFit uint, regionInfo *RectangleInfo) int {
+	return GetImageGeometry(i, geometry, sizeToFit, regionInfo)
+}
+
+var GetImageInfo func(i *ImageInfo)
+
+func (i *ImageInfo) Get() { GetImageInfo(i) }
+
+var IsTaintImage func(i *Image) bool
+
+func (i *Image) Taint() bool { return IsTaintImage(i) }
+
+var ModifyImage func(image **Image, exception *ExceptionInfo) bool
+
+var ReferenceImage func(i *Image) *Image
+
+func (i *Image) Reference() *Image { return ReferenceImage(i) }
+
+var RemoveDefinitions func(i *ImageInfo, options string) bool
+
+func (i *ImageInfo) RemoveDefinitions(options string) bool { return RemoveDefinitions(i, options) }
+
+var ResetImagePage func(i *Image, page string) bool
+
+func (i *Image) ResetPage(page string) bool { return ResetImagePage(i, page) }
+
+var SetImage func(i *Image, opacity Quantum)
+
+func (i *Image) SetImage(opacity Quantum) { SetImage(i, opacity) }
+
+var SetImageColor func(i *Image, color *PixelPacket) bool
+
+func (i *Image) SetColor(color *PixelPacket) bool { return SetImageColor(i, color) }
+
+var SetImageColorRegion func(i *Image, x, y SSize, width, height Size, pixel *PixelPacket) bool
+
+func (i *Image) SetColorRegion(x, y SSize, width, height Size, pixel *PixelPacket) bool {
+	return SetImageColorRegion(i, x, y, width, height, pixel)
+}
+
+var SetImageClipMask func(i *Image, clipMask *Image) bool
+
+func (i *Image) SetClipMask(clipMask *Image) bool { return SetImageClipMask(i, clipMask) }
+
+var SetImageDepth func(i *Image, depth Size) bool
+
+func (i *Image) SetDepth(depth Size) bool { return SetImageDepth(i, depth) }
+
+var SetImageOpacity func(i *Image, opacity Quantum) bool
+
+func (i *Image) SetOpacity(opacity Quantum) bool { return SetImageOpacity(i, opacity) }
+
+var SetImageType func(i *Image, imageType ImageType) bool
+
+func (i *Image) SetType(imageType ImageType) bool { return SetImageType(i, imageType) }
+
+var StripImage func(i *Image) bool
+
+func (i *Image) Strip() bool { return StripImage(i) }
+
+var ImportImagePixelArea func(i *Image, quantumType QuantumType, quantumSize uint, source *byte, options *ImportPixelAreaOptions, importInfo *ImportPixelAreaInfo) bool
+
+func (i *Image) ImportPixelArea(quantumType QuantumType, quantumSize uint, source *byte, options *ImportPixelAreaOptions, importInfo *ImportPixelAreaInfo) bool {
+	return ImportImagePixelArea(i, quantumType, quantumSize, source, options, importInfo)
+}
+
+var ImportImageCommand func(i *ImageInfo, argc int, argv, metadata []string, exception *ExceptionInfo) uint
+
+func (i *ImageInfo) ImportImageCommand(argc int, argv, metadata []string, exception *ExceptionInfo) uint {
+	return ImportImageCommand(i, argc, argv, metadata, exception)
+}
+
+var ImportViewPixelArea func(v *ViewInfo, quantumType QuantumType, quantumSize uint, source *byte, options *ImportPixelAreaOptions, importInfo *ImportPixelAreaInfo) bool
+
+func (v *ViewInfo) ImportPixelArea(quantumType QuantumType, quantumSize uint, source *byte, options *ImportPixelAreaOptions, importInfo *ImportPixelAreaInfo) bool {
+	return ImportViewPixelArea(v, quantumType, quantumSize, source, options, importInfo)
+}
+
+// List
+
+//TODO(t): Sometime *list others **list; harmonise Go-wise
+var AppendImageToList func(images []*Image, image *Image)
+var CloneImageList func(images *Image, exception *ExceptionInfo) *Image
+var DeleteImageFromList func(images []*Image)
+var DestroyImageList func(images *Image) *Image
+var GetFirstImageInList func(images *Image) *Image
+var GetImageFromList func(images *Image, index SSize) *Image
+var GetImageIndexInList func(images *Image) SSize
+var GetImageListLength func(images *Image) Size
+var GetLastImageInList func(images *Image) *Image
+var GetNextImageInList func(images *Image) *Image
+var GetPreviousImageInList func(images *Image) *Image
+var ImageListToArray func(images *Image, exception *ExceptionInfo) []*Image
+var InsertImageInList func(images []*Image, image *Image)
+var NewImageList func() *Image
+var PrependImageToList func(images []*Image, image *Image)
+var RemoveFirstImageFromList func(images []*Image) *Image
+var RemoveLastImageFromList func(images []*Image) *Image
+var ReplaceImageInList func(images []*Image, image *Image)
+var ReverseImageList func(images []*Image)
+var SpliceImageIntoList func(images []*Image, length Size, splice *Image) *Image
+var SplitImageList func(images *Image) *Image
+
+// Magick
+//NOTE(t): DestroyMagicInfoList is static C
+
+var DestroyMagick func()
+var DestroyMagicInfo func()
+var GetImageMagick func(magick *byte, length uint32) string
+var GetMagickInfo func(name string, exception *ExceptionInfo) *MagickInfo
+var GetMagickInfoArray func(exception *ExceptionInfo) []*MagickInfo
+var InitializeMagick func(path string)
+var IsMagickConflict func(magick string) bool
+var ListMagickInfo func(f *FILE, exception *ExceptionInfo) bool
+
+func (f *FILE) MagickInfo(exception *ExceptionInfo) bool { return ListMagickInfo(f, exception) }
+
+var ListModuleMap func(file *FILE, exception *ExceptionInfo) bool
+var MagickToMime func(magick string) string
+var RegisterMagickInfo func(m *MagickInfo) *MagickInfo
+
+func (m *MagickInfo) Register() *MagickInfo { return RegisterMagickInfo(m) }
+
+var SetMagickInfo func(name string) *MagickInfo
+var UnregisterMagickInfo func(name string) bool
+
+// Memory
+
+var MagickAllocFunctions func(freeFunc MagickFreeFunc, mallocFunc MagickMallocFunc, reallocFunc MagickReallocFunc)
+var MagickMalloc func(size uint32) *Void
+var MagickMallocAligned func(alignment, size uint32) *Void
+var MagickMallocCleared func(size uint32) *Void
+var MagickCloneMemory func(destination, source *Void, size uint32) *Void
+var MagickRealloc func(memory *Void, size uint32) *Void
+var MagickFree func(memory *Void)
+var MagickFreeAligned func(memory *Void)
+
+//NOTE(t): MagickMallocAlignedArray undocumented
+var MagickMallocAlignedArray func(alignment, count, size uint32) *Void
+var MagickMallocArray func(count, size uint32) *Void
+
+// Monitor
+
+var MagickMonitor func(text string, offset int64, span uint64, clientData *Void) bool
+var MagickMonitorFormatted func(quantum int64, span uint64, exception *ExceptionInfo, format string, va ...VArg) bool
+var SetMonitorHandler func(handler MonitorHandler) MonitorHandler
+
+// Montage
+
+var CloneMontageInfo func(i *ImageInfo, montageInfo *MontageInfo) *MontageInfo
+var DestroyMontageInfo func(montageInfo *MontageInfo) *MontageInfo
+
+func (i *ImageInfo) CloneMontageInfo(montageInfo *MontageInfo) *MontageInfo {
+	return CloneMontageInfo(i, montageInfo)
+}
+
+var GetMontageInfo func(i *ImageInfo, montageInfo *MontageInfo)
+
+func (i *ImageInfo) MontageInfo(montageInfo *MontageInfo) { GetMontageInfo(i, montageInfo) }
+
+var MontageImages func(images *Image, montageInfo *MontageInfo, exception *ExceptionInfo) *Image
+
+// Operator
+
+var QuantumOperatorImage func(i *Image, channel ChannelType, quantumOperator QuantumOperator, rvalue float64, exception *ExceptionInfo) bool
+
+func (i *Image) QuantumOperator(channel ChannelType, quantumOperator QuantumOperator, rvalue float64, exception *ExceptionInfo) bool {
+	return QuantumOperatorImage(i, channel, quantumOperator, rvalue, exception)
+}
+
+var QuantumOperatorRegionImage func(i *Image, x, y SSize, columns, rows Size, channel ChannelType, quantum_operator QuantumOperator, rvalue float64, exception *ExceptionInfo) bool
+
+func (i *Image) QuantumOperatorRegion(x, y SSize, columns, rows Size, channel ChannelType, quantum_operator QuantumOperator, rvalue float64, exception *ExceptionInfo) bool {
+	return QuantumOperatorRegionImage(i, x, y, columns, rows, channel, quantum_operator, rvalue, exception)
+}
+
+// Paint
+
+var ColorFloodfillImage func(i *Image, drawInfo *DrawInfo, target PixelPacket, xOffset, yOffset SSize, method PaintMethod) bool
+
+func (i *Image) ColorFloodfill(drawInfo *DrawInfo, target PixelPacket, xOffset, yOffset SSize, method PaintMethod) bool {
+	return ColorFloodfillImage(i, drawInfo, target, xOffset, yOffset, method)
+}
+
+var MatteFloodfillImage func(i *Image, target PixelPacket, opacity Quantum, xOffset, yOffset SSize, method PaintMethod) bool
+
+func (i *Image) MatteFloodfill(target PixelPacket, opacity Quantum, xOffset, yOffset SSize, method PaintMethod) bool {
+	return MatteFloodfillImage(i, target, opacity, xOffset, yOffset, method)
+}
+
+var OpaqueImage func(i *Image, target, fill PixelPacket) bool
+
+func (i *Image) Opaque(target, fill PixelPacket) bool { return OpaqueImage(i, target, fill) }
+
+var TransparentImage func(i *Image, target PixelPacket, opacity Quantum) bool
+
+func (i *Image) Transparent(target PixelPacket, opacity Quantum) bool {
+	return TransparentImage(i, target, opacity)
+}
+
+// Pixel Cache
+
+var AccessCacheViewPixels func(v *ViewInfo) *PixelPacket
+
+func (v *ViewInfo) AccessCachePixels() *PixelPacket { return AccessCacheViewPixels(v) }
+
+var GetCacheViewArea func(v *ViewInfo) int64
+
+func (v *ViewInfo) CacheArea() int64 { return GetCacheViewArea(v) }
+
+var GetCacheViewRegion func(v *ViewInfo) RectangleInfo
+
+func (v *ViewInfo) CacheRegion() RectangleInfo { return GetCacheViewRegion(v) }
+
+var AccessImmutableIndexes func(i *Image) *IndexPacket
+
+func (i *Image) AccessImmutableIndexes() *IndexPacket { return AccessImmutableIndexes(i) }
+
+var AccessMutableIndexes func(i *Image) *IndexPacket
+
+func (i *Image) AccessMutableIndexes() *IndexPacket { return AccessMutableIndexes(i) }
+
+var AccessMutablePixels func(i *Image) *PixelPacket
+
+func (i *Image) AccessMutablePixels() *PixelPacket { return AccessMutablePixels(i) }
+
+var AcquireCacheViewPixels func(c *ViewInfo, x, y SSize, columns, rows Size, exception *ExceptionInfo) *PixelPacket
+
+func (c *ViewInfo) AcquirePixels(x, y SSize, columns, rows Size, exception *ExceptionInfo) *PixelPacket {
+	return AcquireCacheViewPixels(c, x, y, columns, rows, exception)
+}
+
+var AcquireImagePixels func(i *Image, x, y SSize, columns, rows Size, exception *ExceptionInfo) *PixelPacket
+
+func (i *Image) AcquireImagePixels(x, y SSize, columns, rows Size, exception *ExceptionInfo) *PixelPacket {
+	return AcquireImagePixels(i, x, y, columns, rows, exception)
+}
+
+var AcquireCacheViewIndexes func(c *ViewInfo) *IndexPacket
+
+func (c *ViewInfo) AcquireIndexes() *IndexPacket { return AcquireCacheViewIndexes(c) }
+
+var AcquireOneCacheViewPixel func(c *ViewInfo, x, y SSize, exception *ExceptionInfo) PixelPacket
+
+func (c *ViewInfo) AcquirePixel(x, y SSize, exception *ExceptionInfo) PixelPacket {
+	return AcquireOneCacheViewPixel(c, x, y, exception)
+}
+
+var AcquireOnePixel func(i *Image, x, y SSize, exception *ExceptionInfo) PixelPacket
+
+func (i *Image) AcquireOnePixel(x, y SSize, exception *ExceptionInfo) PixelPacket {
+	return AcquireOnePixel(i, x, y, exception)
+}
+
+var AcquireOnePixelByReference func(i *Image, pixel *PixelPacket, x, y SSize, exception *ExceptionInfo) bool
+
+func (i *Image) AcquirePixelByReference(pixel *PixelPacket, x, y SSize, exception *ExceptionInfo) bool {
+	return AcquireOnePixelByReference(i, pixel, x, y, exception)
+}
+
+//NOTE(t): DestroyCacheInfo not exported
+
+var GetCacheViewPixels func(c *ViewInfo, x, y SSize, columns, rows Size) *PixelPacket
+
+func (c *ViewInfo) Pixels(x, y SSize, columns, rows Size) *PixelPacket {
+	return GetCacheViewPixels(c, x, y, columns, rows)
+}
+
+//NOTE(t): GetCacheViewImage not exported
+
+var GetCacheViewIndexes func(c *ViewInfo) *IndexPacket
+
+func (c *ViewInfo) ViewIndexes() *IndexPacket { return GetCacheViewIndexes(c) }
+
+var GetImagePixels func(i *Image, x, y SSize, columns, rows Size) *PixelPacket
+
+func (i *Image) ImagePixels(x, y SSize, columns, rows Size) *PixelPacket {
+	return GetImagePixels(i, x, y, columns, rows)
+}
+
+var GetImagePixelsEx func(i *Image, x, y SSize, columns, rows Size, exception *ExceptionInfo) *PixelPacket
+
+func (i *Image) PixelsEx(x, y SSize, columns, rows Size, exception *ExceptionInfo) *PixelPacket {
+	return GetImagePixelsEx(i, x, y, columns, rows, exception)
+}
+
+var GetImageVirtualPixelMethod func(i *Image) VirtualPixelMethod
+
+func (i *Image) VirtualPixelMethod() VirtualPixelMethod { return GetImageVirtualPixelMethod(i) }
+
+var GetIndexes func(i *Image) *IndexPacket
+
+func (i *Image) Indexes() *IndexPacket { return GetIndexes(i) }
+
+var GetOnePixel func(i *Image, x, y SSize) PixelPacket
+
+func (i *Image) OnePixel(x, y SSize) PixelPacket { return GetOnePixel(i, x, y) }
+
+var GetPixels func(i *Image) *PixelPacket
+
+func (i *Image) Pixels() *PixelPacket { return GetPixels(i) }
+
+//NOTE(t): ModifyCache not exported
+
+var OpenCacheView func(i *Image) *ViewInfo
+
+func (i *Image) OpenCacheView() *ViewInfo { return OpenCacheView(i) }
+
+//NOTE(t): ReferenceCache not exported
+
+var SetCacheViewPixels func(c *ViewInfo, x, y int32, columns, rows uint32) *PixelPacket
+
+func (c *ViewInfo) SetPixels(x, y int32, columns, rows uint32) *PixelPacket {
+	return SetCacheViewPixels(c, x, y, columns, rows)
+}
+
+var SetImagePixels func(i *Image, x, y SSize, columns, rows Size) *PixelPacket
+
+func (i *Image) SetPixels(x, y SSize, columns, rows Size) *PixelPacket {
+	return SetImagePixels(i, x, y, columns, rows)
+}
+
+var SetImagePixelsEx func(i *Image, x, y SSize, columns, rows Size, exception *ExceptionInfo) *PixelPacket
+
+func (i *Image) SetPixelsEx(x, y SSize, columns, rows Size, exception *ExceptionInfo) *PixelPacket {
+	return SetImagePixelsEx(i, x, y, columns, rows, exception)
+}
+
+var SetImageVirtualPixelMethod func(i *Image, virtualPixelMethod VirtualPixelMethod) VirtualPixelMethod
+
+func (i *Image) SetVirtualPixelMethod(virtualPixelMethod VirtualPixelMethod) VirtualPixelMethod {
+	return SetImageVirtualPixelMethod(i, virtualPixelMethod)
+}
+
+var SyncCacheViewPixels func(c *ViewInfo) bool
+
+func (c *ViewInfo) SyncPixels() bool { return SyncCacheViewPixels(c) }
+
+var SyncImagePixels func(i *Image) bool
+
+func (i *Image) SyncPixels() bool { return SyncImagePixels(i) }
+
+var SyncImagePixelsEx func(i *Image, exception *ExceptionInfo) bool
+
+func (i *Image) SyncPixelsEx(exception *ExceptionInfo) bool { return SyncImagePixelsEx(i, exception) }
+
+// Pixel Iterator
+
+var InitializePixelIteratorOptions func(options *PixelIteratorOptions, exception *ExceptionInfo)
+var PixelIterateMonoRead func(callBack PixelIteratorMonoReadCallback, options *PixelIteratorOptions, description string, mutableData, immutableData *Void, x, y SSize, columns, rows Size, image *Image, exception *ExceptionInfo) bool
+var PixelIterateMonoModify func(callBack PixelIteratorMonoModifyCallback, options *PixelIteratorOptions, description string, mutableData, immutableData *Void, x, y SSize, columns, rows Size, image *Image, exception *ExceptionInfo) bool
+var PixelIterateDualRead func(callBack PixelIteratorDualReadCallback, options *PixelIteratorOptions, description string, mutableData, immutableData *Void, columns, rows Size, firstImage *Image, firstX, firstY SSize, secondImage *Image, secondX, secondY SSize, exception *ExceptionInfo) bool
+var PixelIterateDualModify func(callBack PixelIteratorDualModifyCallback, options *PixelIteratorOptions, description string, mutableData, immutableData *Void, columns, rows Size, sourceImage *Image, sourceX, sourceY SSize, updateImage *Image, updateX, updateY SSize, exception *ExceptionInfo) bool
+var PixelIterateDualNew func(callBack PixelIteratorDualNewCallback, options *PixelIteratorOptions, description string, mutableData, immutableData *Void, columns, rows Size, sourceImage *Image, sourceX, sourceY SSize, newImage *Image, newX, newY SSize, exception *ExceptionInfo) bool
+var PixelIterateTripleModify func(callBack PixelIteratorTripleModifyCallback, options *PixelIteratorOptions, description string, mutableData, immutableData *Void, columns, rows Size, source1Image, source2Image *Image, sourceX, sourceY SSize, updateImage *Image, updateX, updateY SSize, exception *ExceptionInfo) bool
+var PixelIterateTripleNew func(callBack PixelIteratorTripleNewCallback, options *PixelIteratorOptions, description string, mutableData, immutableData *Void, columns, rows Size, source1Image, source2Image *Image, sourceX, sourceY SSize, newImage *Image, newX, newY SSize, exception *ExceptionInfo) bool
+
+// Plasma
+
+var PlasmaImage func(i *Image, segment *SegmentInfo, attenuate, depth Size) bool
+
+func (i *Image) Plasma(segment *SegmentInfo, attenuate, depth Size) bool {
+	return PlasmaImage(i, segment, attenuate, depth)
+}
+
+// Profile
+
+var AllocateImageProfileIterator func(i *Image) *ImageProfileIterator
+
+func (i *Image) AllocateImageProfileIterator() *ImageProfileIterator {
+	return AllocateImageProfileIterator(i)
+}
+
+var AppendImageProfile func(i *Image, name string, profileChunk *byte, chunkLength uint32) bool
+
+func (i *Image) AppendProfile(name string, profileChunk *byte, chunkLength uint32) bool {
+	return AppendImageProfile(i, name, profileChunk, chunkLength)
+}
+
+var DeallocateImageProfileIterator func(profileIterator *ImageProfileIterator)
+
+var DeleteImageProfile func(i *Image, name string) bool
+
+func (i *Image) DeleteProfile(name string) bool { return DeleteImageProfile(i, name) }
+
+var GetImageProfile func(i *Image, name string, length *Size) []byte
+
+func (i *Image) Profile(name string, length *Size) []byte { return GetImageProfile(i, name, length) }
+
+var GetNextImageProfile func(i *ImageProfileIterator, name **Char, profile **byte, length *Size) string
+
+var ProfileImage func(i *Image, name string, profile []byte, length Size, clone bool) bool
+
+func (i *Image) ProfileImage(name string, profile []byte, length Size, clone bool) bool {
+	return ProfileImage(i, name, profile, length, clone)
+}
+
+var SetImageProfile func(i *Image, name string, profile []byte, length Size) bool
+
+func (i *Image) SetProfile(name string, profile []byte, length Size) bool {
+	return SetImageProfile(i, name, profile, length)
+}
+
+// Quantize
+
+var CloneQuantizeInfo func(q *QuantizeInfo) *QuantizeInfo
+
+func (q *QuantizeInfo) Clone() *QuantizeInfo { return CloneQuantizeInfo(q) }
+
+var CompressImageColormap func(i *Image)
+
+func (i *Image) CompressColormap() { CompressImageColormap(i) }
+
+var DestroyQuantizeInfo func(q *QuantizeInfo)
+
+func (q *QuantizeInfo) Destroy() { DestroyQuantizeInfo(q) }
+
+var GetImageQuantizeError func(i *Image) bool
+
+func (i *Image) QuantizeError() bool { return GetImageQuantizeError(i) }
+
+var GetQuantizeInfo func(q *QuantizeInfo)
+
+func (q *QuantizeInfo) Get() { GetQuantizeInfo(q) }
+
+var GrayscalePseudoClassImage func(*Image)
+
+var MapImage func(i *Image, mapImage *Image, dither bool) bool
+
+func (i *Image) Map(mapImage *Image, dither bool) bool { return MapImage(i, mapImage, dither) }
+
+var MapImages func(images, mapImage *Image, dither bool) bool
+
+var OrderedDitherImage func(i *Image) bool
+
+func (i *Image) OrderedDither() bool { return OrderedDitherImage(i) }
+
+var QuantizeImage func(q *QuantizeInfo, image *Image) bool
+
+func (q *QuantizeInfo) QuantizeImage(image *Image) bool { return QuantizeImage(q, image) }
+
+var QuantizeImages func(q *QuantizeInfo, images *Image) bool
+
+func (q *QuantizeInfo) QuantizeImages(images *Image) bool { return QuantizeImages(q, images) }
+
+// Registry
+
+var DeleteMagickRegistry func(id Size) bool
+var GetImageFromMagickRegistry func(name string, id *Size, exception *ExceptionInfo) *Image
+var GetMagickRegistry func(id Size, type_ *RegistryType, length *Size, exception *ExceptionInfo) *Void
+var SetMagickRegistry func(type_ RegistryType, blob *Void, length Size, exception *ExceptionInfo) SSize
+
+// Resize
+
+var MagnifyImage func(i *Image, exception *ExceptionInfo) *Image
+
+func (i *Image) Magnify(exception *ExceptionInfo) *Image { return MagnifyImage(i, exception) }
+
+var MinifyImage func(i *Image, exception *ExceptionInfo) *Image
+
+func (i *Image) Minify(exception *ExceptionInfo) *Image { return MinifyImage(i, exception) }
+
+var ResizeImage func(i *Image, columns, rows Size, filter FilterTypes, blur float64, exception *ExceptionInfo) *Image
+
+func (i *Image) Resize(columns, rows Size, filter FilterTypes, blur float64, exception *ExceptionInfo) *Image {
+	return ResizeImage(i, columns, rows, filter, blur, exception)
+}
+
+var SampleImage func(i *Image, columns, rows Size, exception *ExceptionInfo) *Image
+
+func (i *Image) Sample(columns, rows Size, exception *ExceptionInfo) *Image {
+	return SampleImage(i, columns, rows, exception)
+}
+
+var ScaleImage func(i *Image, columns, rows Size, exception *ExceptionInfo) *Image
+
+func (i *Image) Scale(columns, rows Size, exception *ExceptionInfo) *Image {
+	return ScaleImage(i, columns, rows, exception)
+}
+
+var ThumbnailImage func(i *Image, columns, rows Size, exception *ExceptionInfo) *Image
+
+func (i *Image) Thumbnail(columns, rows Size, exception *ExceptionInfo) *Image {
+	return ThumbnailImage(i, columns, rows, exception)
+}
+
+// Resource
+
+var AcquireMagickResource func(r ResourceType, size MagickSizeType) bool
+
+func (r ResourceType) AcquireResource(size MagickSizeType) bool {
+	return AcquireMagickResource(r, size)
+}
+
+var GetMagickResource func(r ResourceType) MagickSizeType
+
+func (r ResourceType) Resource() MagickSizeType { return GetMagickResource(r) }
+
+var GetMagickResourceLimit func(r ResourceType) MagickSizeType
+
+func (r ResourceType) Limit() MagickSizeType { return GetMagickResourceLimit(r) }
+
+var LiberateMagickResource func(r ResourceType, size int64)
+
+var ListMagickResourceInfo func(f *FILE, exception *ExceptionInfo) bool
+
+func (f *FILE) MagickResourceInfo(exception *ExceptionInfo) bool {
+	return ListMagickResourceInfo(f, exception)
+}
+
+//NOTE(t): Doc says unsigned long, code int64
+var SetMagickResourceLimit func(r ResourceType, limit MagickSizeType) bool
+
+func (r ResourceType) SetLimit(limit MagickSizeType) bool { return SetMagickResourceLimit(r, limit) }
+
+// Segment
+
+var SegmentImage func(i *Image, colorspace ColorspaceType, verbose bool, clusterThreshold, smoothThreshold float64) bool
+
+func (i *Image) Segment(colorspace ColorspaceType, verbose bool, clusterThreshold, smoothThreshold float64) bool {
+	return SegmentImage(i, colorspace, verbose, clusterThreshold, smoothThreshold)
+}
+
+// Shear
+
+var AffineTransformImage func(i *Image, affineMatrix *AffineMatrix, exception *ExceptionInfo) *Image
+
+func (i *Image) AffineTransform(affineMatrix *AffineMatrix, exception *ExceptionInfo) *Image {
+	return AffineTransformImage(i, affineMatrix, exception)
+}
+
+var AutoOrientImage func(i *Image, o OrientationType, e *ExceptionInfo) *Image
+
+func (i *Image) AutoOrient(o OrientationType, e *ExceptionInfo) *Image {
+	return AutoOrientImage(i, o, e)
+}
+
+var RotateImage func(i *Image, degrees float64, exception *ExceptionInfo) *Image
+
+func (i *Image) Rotate(degrees float64, exception *ExceptionInfo) *Image {
+	return RotateImage(i, degrees, exception)
+}
+
+var ShearImage func(i *Image, xShear, yShear float64, exception *ExceptionInfo) *Image
+
+func (i *Image) Shear(xShear, yShear float64, exception *ExceptionInfo) *Image {
+	return ShearImage(i, xShear, yShear, exception)
+}
+
+// Signature
+
+var FinalizeSignature func(s *SignatureInfo)
+
+func (s *SignatureInfo) Finalize() { FinalizeSignature(s) }
+
+var GetSignatureInfo func(s *SignatureInfo)
+
+func (s *SignatureInfo) Get() { GetSignatureInfo(s) }
+
+var SignatureImage func(i *Image) bool
+
+func (i *Image) Signature() bool { return SignatureImage(i) }
+
+var TransformSignature func(s *SignatureInfo)
+
+func (s *SignatureInfo) Transform() { TransformSignature(s) }
+
+var UpdateSignature func(s *SignatureInfo, message *byte, length uint32)
+
+func (s *SignatureInfo) Update(message *byte, length uint32) { UpdateSignature(s, message, length) }
+
+// Statistics
+
+var GetImageStatistics func(i *Image, statistics *ImageStatistics, exception *ExceptionInfo) bool
+
+func (i *Image) Statistics(statistics *ImageStatistics, exception *ExceptionInfo) bool {
+	return GetImageStatistics(i, statistics, exception)
+}
+
+// Texture
+
+var ConstituteTextureImage func(columns, rows Size, texture *Image, exception *ExceptionInfo) *Image
+
+var TextureImage func(i, texture *Image) bool
+
+func (i *Image) Texture(texture *Image) bool { return TextureImage(i, texture) }
+
+// Transform
+
+var ChopImage func(i *Image, chopInfo *RectangleInfo, exception *ExceptionInfo) *Image
+
+func (i *Image) Chop(chopInfo *RectangleInfo, exception *ExceptionInfo) *Image {
+	return ChopImage(i, chopInfo, exception)
+}
+
+var CoalesceImages func(i *Image, exception *ExceptionInfo) *Image
+
+func (i *Image) CoalesceImages(exception *ExceptionInfo) *Image { return CoalesceImages(i, exception) }
+
+var CropImage func(i *Image, geometry *RectangleInfo, exception *ExceptionInfo) *Image
+
+func (i *Image) Crop(geometry *RectangleInfo, exception *ExceptionInfo) *Image {
+	return CropImage(i, geometry, exception)
+}
+
+var DeconstructImages func(images *Image, exception *ExceptionInfo) *Image
+
+var ExtentImage func(i *Image, geometry *RectangleInfo, exception *ExceptionInfo) *Image
+
+func (i *Image) Extent(geometry *RectangleInfo, exception *ExceptionInfo) *Image {
+	return ExtentImage(i, geometry, exception)
+}
+
+var FlattenImages func(i *Image, exception *ExceptionInfo) *Image
+
+func (i *Image) FlattenImages(exception *ExceptionInfo) *Image { return FlattenImages(i, exception) }
+
+var FlipImage func(i *Image, exception *ExceptionInfo) *Image
+
+func (i *Image) Flip(exception *ExceptionInfo) *Image { return FlipImage(i, exception) }
+
+var FlopImage func(i *Image, exception *ExceptionInfo) *Image
+
+func (i *Image) Flop(exception *ExceptionInfo) *Image { return FlopImage(i, exception) }
+
+var MosaicImages func(i *Image, exception *ExceptionInfo) *Image
+
+func (i *Image) MosaicImages(exception *ExceptionInfo) *Image { return MosaicImages(i, exception) }
+
+var RollImage func(i *Image, xOffset, yOffset SSize, exception *ExceptionInfo) *Image
+
+func (i *Image) Roll(xOffset, yOffset SSize, exception *ExceptionInfo) *Image {
+	return RollImage(i, xOffset, yOffset, exception)
+}
+
+var ShaveImage func(i *Image, shaveInfo *RectangleInfo, exception *ExceptionInfo) *Image
+
+func (i *Image) Shave(shaveInfo *RectangleInfo, exception *ExceptionInfo) *Image {
+	return ShaveImage(i, shaveInfo, exception)
+}
+
+var TransformImage func(image **Image, cropGeometry, imageGeometry string) bool

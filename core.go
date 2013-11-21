@@ -20,6 +20,11 @@ type (
 
 	FILE fix
 
+	PathOperation fix
+	PathMode      fix
+	PaintMethod   fix
+	NoiseType     fix
+
 	Char              byte
 	Enum              int
 	MagickBooleanType uint
@@ -1128,6 +1133,23 @@ const (
 	PreviousDispose
 )
 
+type DrawContext struct {
+	Image               *Image
+	Mvg                 *VString
+	MvgAlloc, MvgLength Size
+	MvgWidth            uint
+	PatternId           *VString
+	PatternBounds       RectangleInfo
+	PatternOffset       Size
+	Index               uint
+	GraphicContext      **DrawInfo
+	FilterOff           int
+	IndentDepth         uint
+	PathOperation       PathOperation
+	PathMode            PathMode
+	Signature           Size
+}
+
 type DrawInfo struct {
 	Primitive        *VString
 	Geometry         *VString
@@ -1906,9 +1928,9 @@ func (i *Image) SetBlobTemporary(isTemporary bool) { SetBlobTemporary(i, isTempo
 
 // Channel
 
-var ChannelImage func(i *Image, channel ChannelType) uint
+var ChannelImage func(i *Image, channel ChannelType) bool
 
-func (i *Image) Channel(channel ChannelType) uint { return ChannelImage(i, channel) }
+func (i *Image) Channel(channel ChannelType) bool { return ChannelImage(i, channel) }
 
 var ExportImageChannel func(i *Image, channel ChannelType, exception *ExceptionInfo) *Image
 
@@ -2030,9 +2052,9 @@ var MagickSetConfirmAccessHandler func(handler ConfirmAccessHandler) ConfirmAcce
 
 var ConstituteImage func(columns, rows Size, map_ string, storage StorageType, pixels *Void, exception *ExceptionInfo) *Image
 
-var DispatchImage func(i *Image, xOffset, yOffset SSize, columns, rows Size, map_ string, type_ StorageType, pixels *Void, exception *ExceptionInfo) uint
+var DispatchImage func(i *Image, xOffset, yOffset SSize, columns, rows Size, map_ string, type_ StorageType, pixels *Void, exception *ExceptionInfo) bool
 
-func (i *Image) Dispatch(xOffset, yOffset SSize, columns, rows Size, map_ string, type_ StorageType, pixels *Void, exception *ExceptionInfo) uint {
+func (i *Image) Dispatch(xOffset, yOffset SSize, columns, rows Size, map_ string, type_ StorageType, pixels *Void, exception *ExceptionInfo) bool {
 	return DispatchImage(i, xOffset, yOffset, columns, rows, map_, type_, pixels, exception)
 }
 
@@ -2236,3 +2258,681 @@ func (i *Image) SetType(imageType ImageType) bool { return SetImageType(i, image
 var StripImage func(i *Image) bool
 
 func (i *Image) Strip() bool { return StripImage(i) }
+
+// Draw
+
+var DrawAnnotation func(d *DrawContext, x, y float64, text *byte)
+
+func (d *DrawContext) Annotation(x, y float64, text *byte) { DrawAnnotation(d, x, y, text) }
+
+var DrawAffine func(d *DrawContext, a *AffineMatrix)
+
+func (d *DrawContext) Affine(a *AffineMatrix) { DrawAffine(d, a) }
+
+var DrawAllocateContext func(drawInfo *DrawInfo, image *Image) *DrawContext
+
+var DrawArc func(d *DrawContext, sx, sy, ex, ey, sd, ed float64)
+
+func (d *DrawContext) Arc(sx, sy, ex, ey, sd, ed float64) { DrawArc(d, sx, sy, ex, ey, sd, ed) }
+
+var DrawBezier func(d *DrawContext, num_coords Size, coordinates *PointInfo)
+
+func (d *DrawContext) Bezier(numCoords Size, coordinates *PointInfo) {
+	DrawBezier(d, numCoords, coordinates)
+}
+
+var DrawCircle func(d *DrawContext, ox, oy, px, py float64)
+
+func (d *DrawContext) Circle(ox, oy, px, py float64) { DrawCircle(d, ox, oy, px, py) }
+
+var DrawGetClipPath func(d *DrawContext) string
+
+func (d *DrawContext) ClipPath() string { return DrawGetClipPath(d) }
+
+var DrawGetClipRule func(d *DrawContext) FillRule
+
+func (d *DrawContext) ClipRule() FillRule { return DrawGetClipRule(d) }
+
+var DrawGetClipUnits func(d *DrawContext) ClipPathUnits
+
+func (d *DrawContext) ClipUnits() ClipPathUnits { return DrawGetClipUnits(d) }
+
+var DrawSetClipPath func(d *DrawContext, clip_path string)
+
+func (d *DrawContext) SetClipPath(clip_path string) { DrawSetClipPath(d, clip_path) }
+
+var DrawSetClipRule func(d *DrawContext, fill_rule FillRule)
+
+func (d *DrawContext) SetClipRule(fill_rule FillRule) { DrawSetClipRule(d, fill_rule) }
+
+var DrawSetClipUnits func(d *DrawContext, clip_units ClipPathUnits)
+
+func (d *DrawContext) SetClipUnits(clip_units ClipPathUnits) { DrawSetClipUnits(d, clip_units) }
+
+var DrawColor func(d *DrawContext, x, y float64, paintMethod PaintMethod)
+
+func (d *DrawContext) Color(x, y float64, paintMethod PaintMethod) { DrawColor(d, x, y, paintMethod) }
+
+var DrawComment func(d *DrawContext, comment string)
+
+func (d *DrawContext) Comment(comment string) { DrawComment(d, comment) }
+
+var DrawDestroyContext func(d *DrawContext)
+
+func (d *DrawContext) Destroy() { DrawDestroyContext(d) }
+
+var DrawEllipse func(d *DrawContext, ox, oy, rx, ry, start, end float64)
+
+func (d *DrawContext) Ellipse(ox, oy, rx, ry, start, end float64) {
+	DrawEllipse(d, ox, oy, rx, ry, start, end)
+}
+
+var DrawGetFillColor func(d *DrawContext) PixelPacket
+
+func (d *DrawContext) FillColor() PixelPacket { return DrawGetFillColor(d) }
+
+var DrawSetFillColor func(d *DrawContext, fillColor *PixelPacket)
+
+func (d *DrawContext) SetFillColor(fillColor *PixelPacket) { DrawSetFillColor(d, fillColor) }
+
+var DrawSetFillColorString func(d *DrawContext, fillColor string)
+
+func (d *DrawContext) SetFillColorString(fillColor string) { DrawSetFillColorString(d, fillColor) }
+
+var DrawSetFillPatternURL func(d *DrawContext, fillUrl string)
+
+func (d *DrawContext) SetFillPatternURL(fillUrl string) { DrawSetFillPatternURL(d, fillUrl) }
+
+var DrawGetFillOpacity func(d *DrawContext) float64
+
+func (d *DrawContext) FillOpacity() float64 { return DrawGetFillOpacity(d) }
+
+var DrawSetFillOpacity func(d *DrawContext, fillOpacity float64)
+
+func (d *DrawContext) SetFillOpacity(fillOpacity float64) { DrawSetFillOpacity(d, fillOpacity) }
+
+var DrawGetFillRule func(d *DrawContext) FillRule
+
+func (d *DrawContext) FillRule() FillRule { return DrawGetFillRule(d) }
+
+var DrawSetFillRule func(d *DrawContext, fillRule FillRule)
+
+func (d *DrawContext) SetFillRule(fillRule FillRule) { DrawSetFillRule(d, fillRule) }
+
+var DrawGetFont func(d *DrawContext) string
+
+func (d *DrawContext) Font() string { return DrawGetFont(d) }
+
+var DrawGetFontFamily func(d *DrawContext) string
+
+var DrawSetFont func(d *DrawContext, fontName string)
+
+func (d *DrawContext) SetFont(fontName string) { DrawSetFont(d, fontName) }
+
+func (d *DrawContext) FontFamily() string { return DrawGetFontFamily(d) }
+
+var DrawSetFontFamily func(d *DrawContext, fontFamily string)
+
+func (d *DrawContext) SetFontFamily(fontFamily string) { DrawSetFontFamily(d, fontFamily) }
+
+var DrawGetFontSize func(d *DrawContext) float64
+
+func (d *DrawContext) FontSize() float64 { return DrawGetFontSize(d) }
+
+var DrawGetFontStretch func(d *DrawContext) StretchType
+
+func (d *DrawContext) FontStretch() StretchType { return DrawGetFontStretch(d) }
+
+var DrawGetFontStyle func(d *DrawContext) StyleType
+
+func (d *DrawContext) FontStyle() StyleType { return DrawGetFontStyle(d) }
+
+var DrawGetFontWeight func(d *DrawContext) Size
+
+func (d *DrawContext) FontWeight() Size { return DrawGetFontWeight(d) }
+
+var DrawSetFontSize func(d *DrawContext, fontPointsize float64)
+
+func (d *DrawContext) SetFontSize(fontPointsize float64) { DrawSetFontSize(d, fontPointsize) }
+
+var DrawSetFontStretch func(d *DrawContext, fontStretch StretchType)
+
+func (d *DrawContext) SetFontStretch(fontStretch StretchType) { DrawSetFontStretch(d, fontStretch) }
+
+var DrawSetFontStyle func(d *DrawContext, fontStyle StyleType)
+
+func (d *DrawContext) SetFontStyle(fontStyle StyleType) { DrawSetFontStyle(d, fontStyle) }
+
+var DrawSetFontWeight func(d *DrawContext, fontWeight Size)
+
+func (d *DrawContext) SetFontWeight(fontWeight Size) { DrawSetFontWeight(d, fontWeight) }
+
+var DrawGetGravity func(d *DrawContext) GravityType
+
+func (d *DrawContext) Gravity() GravityType { return DrawGetGravity(d) }
+
+var DrawSetGravity func(d *DrawContext, gravity GravityType)
+
+func (d *DrawContext) SetGravity(gravity GravityType) { DrawSetGravity(d, gravity) }
+
+var DrawComposite func(d *DrawContext, compositeOperator CompositeOperator, x, y, width, height float64, image *Image)
+
+func (d *DrawContext) Composite(compositeOperator CompositeOperator, x, y, width, height float64, image *Image) {
+	DrawComposite(d, compositeOperator, x, y, width, height, image)
+}
+
+var DrawLine func(d *DrawContext, sx, sy, ex, ey float64)
+
+func (d *DrawContext) Line(sx, sy, ex, ey float64) { DrawLine(d, sx, sy, ex, ey) }
+
+var DrawMatte func(d *DrawContext, x, y float64, paintMethod PaintMethod)
+
+func (d *DrawContext) Matte(x, y float64, paintMethod PaintMethod) { DrawMatte(d, x, y, paintMethod) }
+
+var DrawPathClose func(d *DrawContext)
+
+func (d *DrawContext) PathClose() { DrawPathClose(d) }
+
+var DrawPathCurveToAbsolute func(d *DrawContext, x1, y1, x2, y2, x, y float64)
+
+func (d *DrawContext) PathCurveToAbsolute(x1, y1, x2, y2, x, y float64) {
+	DrawPathCurveToAbsolute(d, x1, y1, x2, y2, x, y)
+}
+
+var DrawPathCurveToRelative func(d *DrawContext, x1, y1, x2, y2, x, y float64)
+
+func (d *DrawContext) PathCurveToRelative(x1, y1, x2, y2, x, y float64) {
+	DrawPathCurveToRelative(d, x1, y1, x2, y2, x, y)
+}
+
+var DrawPathCurveToQuadraticBezierAbsolute func(d *DrawContext, x1, y1, x, y float64)
+
+func (d *DrawContext) PathCurveToQuadraticBezierAbsolute(x1, y1, x, y float64) {
+	DrawPathCurveToQuadraticBezierAbsolute(d, x1, y1, x, y)
+}
+
+var DrawPathCurveToQuadraticBezierRelative func(d *DrawContext, x1, y1, x, y float64)
+
+func (d *DrawContext) PathCurveToQuadraticBezierRelative(x1, y1, x, y float64) {
+	DrawPathCurveToQuadraticBezierRelative(d, x1, y1, x, y)
+}
+
+var DrawPathCurveToQuadraticBezierSmoothAbsolute func(d *DrawContext, x, y float64)
+
+func (d *DrawContext) PathCurveToQuadraticBezierSmoothAbsolute(x, y float64) {
+	DrawPathCurveToQuadraticBezierSmoothAbsolute(d, x, y)
+}
+
+var DrawPathCurveToQuadraticBezierSmoothRelative func(d *DrawContext, x, y float64)
+
+func (d *DrawContext) PathCurveToQuadraticBezierSmoothRelative(x, y float64) {
+	DrawPathCurveToQuadraticBezierSmoothRelative(d, x, y)
+}
+
+var DrawPathCurveToSmoothAbsolute func(d *DrawContext, x2, y2, x, y float64)
+
+func (d *DrawContext) PathCurveToSmoothAbsolute(x2, y2, x, y float64) {
+	DrawPathCurveToSmoothAbsolute(d, x2, y2, x, y)
+}
+
+var DrawPathCurveToSmoothRelative func(d *DrawContext, x2, y2, x, y float64)
+
+func (d *DrawContext) PathCurveToSmoothRelative(x2, y2, x, y float64) {
+	DrawPathCurveToSmoothRelative(d, x2, y2, x, y)
+}
+
+var DrawPathEllipticArcAbsolute func(d *DrawContext, rx, ry, xAxisRotation float64, largeArcFlag, sweepFlag uint, x, y float64)
+
+func (d *DrawContext) PathEllipticArcAbsolute(rx, ry, xAxisRotation float64, largeArcFlag, sweepFlag uint, x, y float64) {
+	DrawPathEllipticArcAbsolute(d, rx, ry, xAxisRotation, largeArcFlag, sweepFlag, x, y)
+}
+
+var DrawPathEllipticArcRelative func(d *DrawContext, rx, ry, xAxisRotation float64, largeArcFlag, sweepFlag uint, x, y float64)
+
+func (d *DrawContext) PathEllipticArcRelative(rx, ry, xAxisRotation float64, largeArcFlag, sweepFlag uint, x, y float64) {
+	DrawPathEllipticArcRelative(d, rx, ry, xAxisRotation, largeArcFlag, sweepFlag, x, y)
+}
+
+var DrawPathFinish func(d *DrawContext)
+
+func (d *DrawContext) PathFinish() { DrawPathFinish(d) }
+
+var DrawPathLineToAbsolute func(d *DrawContext, x, y float64)
+
+func (d *DrawContext) PathLineToAbsolute(x, y float64) { DrawPathLineToAbsolute(d, x, y) }
+
+var DrawPathLineToRelative func(d *DrawContext, x, y float64)
+
+func (d *DrawContext) PathLineToRelative(x, y float64) { DrawPathLineToRelative(d, x, y) }
+
+var DrawPathLineToHorizontalAbsolute func(d *DrawContext, x float64)
+
+func (d *DrawContext) PathLineToHorizontalAbsolute(x float64) { DrawPathLineToHorizontalAbsolute(d, x) }
+
+var DrawPathLineToHorizontalRelative func(d *DrawContext, x float64)
+
+func (d *DrawContext) PathLineToHorizontalRelative(x float64) { DrawPathLineToHorizontalRelative(d, x) }
+
+var DrawPathLineToVerticalAbsolute func(d *DrawContext, y float64)
+
+func (d *DrawContext) PathLineToVerticalAbsolute(y float64) { DrawPathLineToVerticalAbsolute(d, y) }
+
+var DrawPathLineToVerticalRelative func(d *DrawContext, y float64)
+
+func (d *DrawContext) PathLineToVerticalRelative(y float64) { DrawPathLineToVerticalRelative(d, y) }
+
+var DrawPathMoveToAbsolute func(d *DrawContext, x, y float64)
+
+func (d *DrawContext) PathMoveToAbsolute(x, y float64) { DrawPathMoveToAbsolute(d, x, y) }
+
+var DrawPathMoveToRelative func(d *DrawContext, x, y float64)
+
+func (d *DrawContext) PathMoveToRelative(x, y float64) { DrawPathMoveToRelative(d, x, y) }
+
+var DrawPathStart func(d *DrawContext)
+
+func (d *DrawContext) PathStart() { DrawPathStart(d) }
+
+var DrawPeekGraphicContext func(d *DrawContext) *DrawInfo
+
+func (d *DrawContext) PeekGraphicContext() *DrawInfo { return DrawPeekGraphicContext(d) }
+
+var DrawPoint func(d *DrawContext, x, y float64)
+
+func (d *DrawContext) Point(x, y float64) { DrawPoint(d, x, y) }
+
+var DrawPolygon func(d *DrawContext, numCoords Size, coordinates *PointInfo)
+
+func (d *DrawContext) Polygon(numCoords Size, coordinates *PointInfo) {
+	DrawPolygon(d, numCoords, coordinates)
+}
+
+var DrawPolyline func(d *DrawContext, numCoords Size, coordinates *PointInfo)
+
+func (d *DrawContext) Polyline(numCoords Size, coordinates *PointInfo) {
+	DrawPolyline(d, numCoords, coordinates)
+}
+
+var DrawPopClipPath func(d *DrawContext)
+
+func (d *DrawContext) PopClipPath() { DrawPopClipPath(d) }
+
+var DrawPopDefs func(d *DrawContext)
+
+func (d *DrawContext) PopDefs() { DrawPopDefs(d) }
+
+var DrawPopGraphicContext func(d *DrawContext)
+
+func (d *DrawContext) PopGraphicContext() { DrawPopGraphicContext(d) }
+
+var DrawPopPattern func(d *DrawContext)
+
+func (d *DrawContext) PopPattern() { DrawPopPattern(d) }
+
+var DrawPushClipPath func(d *DrawContext, clipPathId string)
+
+func (d *DrawContext) PushClipPath(clipPathId string) { DrawPushClipPath(d, clipPathId) }
+
+var DrawPushDefs func(d *DrawContext)
+
+func (d *DrawContext) PushDefs() { DrawPushDefs(d) }
+
+var DrawPushGraphicContext func(d *DrawContext)
+
+func (d *DrawContext) PushGraphicContext() { DrawPushGraphicContext(d) }
+
+var DrawPushPattern func(d *DrawContext, patternId string, x, y, width, height float64)
+
+func (d *DrawContext) PushPattern(patternId string, x, y, width, height float64) {
+	DrawPushPattern(d, patternId, x, y, width, height)
+}
+
+var DrawRectangle func(d *DrawContext, x1, y1, x2, y2 float64)
+
+func (d *DrawContext) Rectangle(x1, y1, x2, y2 float64) { DrawRectangle(d, x1, y1, x2, y2) }
+
+var DrawRender func(d *DrawContext) int
+
+func (d *DrawContext) Render() int { return DrawRender(d) }
+
+var DrawRotate func(d *DrawContext, degrees float64)
+
+func (d *DrawContext) Rotate(degrees float64) { DrawRotate(d, degrees) }
+
+var DrawRoundRectangle func(d *DrawContext, x1, y1, x2, y2, rx, ry float64)
+
+func (d *DrawContext) RoundRectangle(x1, y1, x2, y2, rx, ry float64) {
+	DrawRoundRectangle(d, x1, y1, x2, y2, rx, ry)
+}
+
+var DrawScale func(d *DrawContext, x, y float64)
+
+func (d *DrawContext) Scale(x, y float64) { DrawScale(d, x, y) }
+
+var DrawSkewX func(d *DrawContext, degrees float64)
+
+func (d *DrawContext) SkewX(degrees float64) { DrawSkewX(d, degrees) }
+
+var DrawSkewY func(d *DrawContext, degrees float64)
+
+func (d *DrawContext) SkewY(degrees float64) { DrawSkewY(d, degrees) }
+
+//NOTE(t): DrawSetStopColor missing from dll.
+
+var DrawGetStrokeColor func(d *DrawContext) PixelPacket
+
+func (d *DrawContext) StrokeColor() PixelPacket { return DrawGetStrokeColor(d) }
+
+var DrawSetStrokeColor func(d *DrawContext, strokeColor *PixelPacket)
+
+func (d *DrawContext) SetStrokeColor(strokeColor *PixelPacket) { DrawSetStrokeColor(d, strokeColor) }
+
+var DrawSetStrokeColorString func(d *DrawContext, strokeColor string)
+
+func (d *DrawContext) SetStrokeColorString(strokeColor string) {
+	DrawSetStrokeColorString(d, strokeColor)
+}
+
+var DrawSetStrokePatternURL func(d *DrawContext, strokeUrl string)
+
+func (d *DrawContext) SetStrokePatternURL(strokeUrl string) { DrawSetStrokePatternURL(d, strokeUrl) }
+
+var DrawGetStrokeAntialias func(d *DrawContext) bool
+
+func (d *DrawContext) StrokeAntialias() bool { return DrawGetStrokeAntialias(d) }
+
+var DrawSetStrokeAntialias func(d *DrawContext, trueFalse bool)
+
+func (d *DrawContext) SetStrokeAntialias(trueFalse bool) { DrawSetStrokeAntialias(d, trueFalse) }
+
+var DrawGetStrokeDashArray func(d *DrawContext, numElems *Size) []float64
+
+func (d *DrawContext) StrokeDashArray(numElems *Size) []float64 {
+	return DrawGetStrokeDashArray(d, numElems)
+}
+
+var DrawSetStrokeDashArray func(d *DrawContext, numElems Size, dasharray []float64)
+
+func (d *DrawContext) SetStrokeDashArray(numElems Size, dasharray []float64) {
+	DrawSetStrokeDashArray(d, numElems, dasharray)
+}
+
+var DrawGetStrokeDashOffset func(d *DrawContext) float64
+
+func (d *DrawContext) StrokeDashOffset() float64 { return DrawGetStrokeDashOffset(d) }
+
+var DrawSetStrokeDashOffset func(d *DrawContext, dashoffset float64)
+
+func (d *DrawContext) SetStrokeDashOffset(dashoffset float64) { DrawSetStrokeDashOffset(d, dashoffset) }
+
+var DrawGetStrokeLineCap func(d *DrawContext) LineCap
+
+func (d *DrawContext) StrokeLineCap() LineCap { return DrawGetStrokeLineCap(d) }
+
+var DrawSetStrokeLineCap func(d *DrawContext, linecap LineCap)
+
+func (d *DrawContext) SetStrokeLineCap(linecap LineCap) { DrawSetStrokeLineCap(d, linecap) }
+
+var DrawGetStrokeLineJoin func(d *DrawContext) LineJoin
+
+func (d *DrawContext) StrokeLineJoin() LineJoin { return DrawGetStrokeLineJoin(d) }
+
+var DrawSetStrokeLineJoin func(d *DrawContext, linejoin LineJoin)
+
+func (d *DrawContext) SetStrokeLineJoin(linejoin LineJoin) { DrawSetStrokeLineJoin(d, linejoin) }
+
+var DrawGetStrokeMiterLimit func(d *DrawContext) Size
+
+func (d *DrawContext) StrokeMiterLimit() Size { return DrawGetStrokeMiterLimit(d) }
+
+var DrawSetStrokeMiterLimit func(d *DrawContext, miterlimit Size)
+
+func (d *DrawContext) SetStrokeMiterLimit(miterlimit Size) {
+	DrawSetStrokeMiterLimit(d, miterlimit)
+}
+
+var DrawGetStrokeOpacity func(d *DrawContext) float64
+
+func (d *DrawContext) StrokeOpacity() float64 { return DrawGetStrokeOpacity(d) }
+
+var DrawSetStrokeOpacity func(d *DrawContext, opacity float64)
+
+func (d *DrawContext) SetStrokeOpacity(opacity float64) { DrawSetStrokeOpacity(d, opacity) }
+
+var DrawGetStrokeWidth func(d *DrawContext) float64
+
+func (d *DrawContext) StrokeWidth() float64 { return DrawGetStrokeWidth(d) }
+
+var DrawSetStrokeWidth func(d *DrawContext, width float64)
+
+func (d *DrawContext) SetStrokeWidth(width float64) { DrawSetStrokeWidth(d, width) }
+
+var DrawGetTextAntialias func(d *DrawContext) bool
+
+func (d *DrawContext) TextAntialias() bool { return DrawGetTextAntialias(d) }
+
+var DrawSetTextAntialias func(d *DrawContext, trueFalse bool)
+
+func (d *DrawContext) SetTextAntialias(trueFalse bool) { DrawSetTextAntialias(d, trueFalse) }
+
+var DrawGetTextDecoration func(d *DrawContext) DecorationType
+
+func (d *DrawContext) TextDecoration() DecorationType { return DrawGetTextDecoration(d) }
+
+var DrawSetTextDecoration func(d *DrawContext, decoration DecorationType)
+
+func (d *DrawContext) SetTextDecoration(decoration DecorationType) {
+	DrawSetTextDecoration(d, decoration)
+}
+
+var DrawGetTextEncoding func(d *DrawContext) string
+
+func (d *DrawContext) TextEncoding() string { return DrawGetTextEncoding(d) }
+
+var DrawSetTextEncoding func(d *DrawContext, encoding string)
+
+func (d *DrawContext) SetTextEncoding(encoding string) { DrawSetTextEncoding(d, encoding) }
+
+var DrawGetTextUnderColor func(d *DrawContext) PixelPacket
+
+func (d *DrawContext) TextUnderColor() PixelPacket { return DrawGetTextUnderColor(d) }
+
+var DrawSetTextUnderColor func(d *DrawContext, color *PixelPacket)
+
+func (d *DrawContext) SetTextUnderColor(color *PixelPacket) { DrawSetTextUnderColor(d, color) }
+
+var DrawSetTextUnderColorString func(d *DrawContext, underColor string)
+
+func (d *DrawContext) SetTextUnderColorString(underColor string) {
+	DrawSetTextUnderColorString(d, underColor)
+}
+
+var DrawTranslate func(d *DrawContext, x, y float64)
+
+func (d *DrawContext) Translate(x, y float64) { DrawTranslate(d, x, y) }
+
+var DrawSetViewbox func(d *DrawContext, x1, y1, x2, y2 Size)
+
+func (d *DrawContext) SetViewbox(x1, y1, x2, y2 Size) { DrawSetViewbox(d, x1, y1, x2, y2) }
+
+// Effects
+
+var AdaptiveThresholdImage func(i *Image, width, height Size, offset SSize, exception *ExceptionInfo) *Image
+
+func (i *Image) AdaptiveThreshold(width, height Size, offset SSize, exception *ExceptionInfo) *Image {
+	return AdaptiveThresholdImage(i, width, height, offset, exception)
+}
+
+var AddNoiseImage func(i *Image, noiseType NoiseType, exception *ExceptionInfo) *Image
+
+func (i *Image) AddNoise(noiseType NoiseType, exception *ExceptionInfo) *Image {
+	return AddNoiseImage(i, noiseType, exception)
+}
+
+var AddNoiseImageChannel func(i *Image, channel ChannelType, noiseType NoiseType, exception *ExceptionInfo) *Image
+
+func (i *Image) AddNoiseChannel(channel ChannelType, noiseType NoiseType, exception *ExceptionInfo) *Image {
+	return AddNoiseImageChannel(i, channel, noiseType, exception)
+}
+
+var BlackThresholdImage func(i *Image, threshold string) bool
+
+func (i *Image) BlackThreshold(threshold string) bool { return BlackThresholdImage(i, threshold) }
+
+var BlurImage func(i *Image, radius, sigma float64, exception *ExceptionInfo) *Image
+
+func (i *Image) Blur(radius, sigma float64, exception *ExceptionInfo) *Image {
+	return BlurImage(i, radius, sigma, exception)
+}
+
+var BlurImageChannel func(i *Image, channel ChannelType, radius, sigma float64, exception *ExceptionInfo) *Image
+
+func (i *Image) BlurChannel(channel ChannelType, radius, sigma float64, exception *ExceptionInfo) *Image {
+	return BlurImageChannel(i, channel, radius, sigma, exception)
+}
+
+var ChannelThresholdImage func(i *Image, level string) bool
+
+func (i *Image) ChannelThreshold(level string) bool { return ChannelThresholdImage(i, level) }
+
+var ConvolveImage func(i *Image, order Size, kernel *float64, exception *ExceptionInfo) *Image
+
+func (i *Image) Convolve(order Size, kernel *float64, exception *ExceptionInfo) *Image {
+	return ConvolveImage(i, order, kernel, exception)
+}
+
+var DespeckleImage func(i *Image, exception *ExceptionInfo) *Image
+
+func (i *Image) Despeckle(exception *ExceptionInfo) *Image { return DespeckleImage(i, exception) }
+
+var EdgeImage func(i *Image, radius float64, exception *ExceptionInfo) *Image
+
+func (i *Image) Edge(radius float64, exception *ExceptionInfo) *Image {
+	return EdgeImage(i, radius, exception)
+}
+
+var EmbossImage func(i *Image, radius, sigma float64, exception *ExceptionInfo) *Image
+
+func (i *Image) Emboss(radius, sigma float64, exception *ExceptionInfo) *Image {
+	return EmbossImage(i, radius, sigma, exception)
+}
+
+var EnhanceImage func(i *Image, exception *ExceptionInfo) *Image
+
+func (i *Image) Enhance(exception *ExceptionInfo) *Image { return EnhanceImage(i, exception) }
+
+var GaussianBlurImage func(i *Image, radius, sigma float64, exception *ExceptionInfo) *Image
+
+func (i *Image) GaussianBlur(radius, sigma float64, exception *ExceptionInfo) *Image {
+	return GaussianBlurImage(i, radius, sigma, exception)
+}
+
+var GaussianBlurImageChannel func(i *Image, channel ChannelType, radius, sigma float64, exception *ExceptionInfo) *Image
+
+func (i *Image) GaussianBlurChannel(channel ChannelType, radius, sigma float64, exception *ExceptionInfo) *Image {
+	return GaussianBlurImageChannel(i, channel, radius, sigma, exception)
+}
+
+var MedianFilterImage func(i *Image, radius float64, exception *ExceptionInfo) *Image
+
+func (i *Image) MedianFilter(radius float64, exception *ExceptionInfo) *Image {
+	return MedianFilterImage(i, radius, exception)
+}
+
+var MotionBlurImage func(i *Image, radius, sigma, angle float64, exception *ExceptionInfo) *Image
+
+func (i *Image) MotionBlur(radius, sigma, angle float64, exception *ExceptionInfo) *Image {
+	return MotionBlurImage(i, radius, sigma, angle, exception)
+}
+
+var RandomChannelThresholdImage func(i *Image, channel, thresholds string, exception *ExceptionInfo) bool
+
+func (i *Image) RandomChannelThresholdImage(channel, thresholds string, exception *ExceptionInfo) bool {
+	return RandomChannelThresholdImage(i, channel, thresholds, exception)
+}
+
+var ReduceNoiseImage func(i *Image, radius float64, exception *ExceptionInfo) *Image
+
+func (i *Image) ReduceNoise(radius float64, exception *ExceptionInfo) *Image {
+	return ReduceNoiseImage(i, radius, exception)
+}
+
+var ShadeImage func(i *Image, gray bool, azimuth, elevation float64, exception *ExceptionInfo) *Image
+
+func (i *Image) Shade(gray bool, azimuth, elevation float64, exception *ExceptionInfo) *Image {
+	return ShadeImage(i, gray, azimuth, elevation, exception)
+}
+
+var SharpenImage func(i *Image, radius, sigma float64, exception *ExceptionInfo) *Image
+
+func (i *Image) Sharpen(radius, sigma float64, exception *ExceptionInfo) *Image {
+	return SharpenImage(i, radius, sigma, exception)
+}
+
+var SharpenImageChannel func(i *Image, channel ChannelType, radius, sigma float64, exception *ExceptionInfo) *Image
+
+func (i *Image) SharpenChannel(channel ChannelType, radius, sigma float64, exception *ExceptionInfo) *Image {
+	return SharpenImageChannel(i, channel, radius, sigma, exception)
+}
+
+var SpreadImage func(i *Image, radius float64, exception *ExceptionInfo) *Image
+
+func (i *Image) Spread(radius float64, exception *ExceptionInfo) *Image {
+	return SpreadImage(i, radius, exception)
+}
+
+var ThresholdImage func(i *Image, threshold float64) bool
+
+func (i *Image) Threshold(threshold float64) bool { return ThresholdImage(i, threshold) }
+
+var UnsharpMaskImage func(i *Image, radius, sigma, amount, threshold float64, exception *ExceptionInfo) *Image
+
+func (i *Image) UnsharpMask(radius, sigma, amount, threshold float64, exception *ExceptionInfo) *Image {
+	return UnsharpMaskImage(i, radius, sigma, amount, threshold, exception)
+}
+
+var UnsharpMaskImageChannel func(i *Image, channel ChannelType, radius, sigma, amount, threshold float64, exception *ExceptionInfo) *Image
+
+func (i *Image) UnsharpMaskChannel(channel ChannelType, radius, sigma, amount, threshold float64, exception *ExceptionInfo) *Image {
+	return UnsharpMaskImageChannel(i, channel, radius, sigma, amount, threshold, exception)
+}
+
+var WhiteThresholdImage func(i *Image, threshold string) bool
+
+func (i *Image) WhiteThreshold(threshold string) bool { return WhiteThresholdImage(i, threshold) }
+
+// Enhance
+
+var ContrastImage func(i *Image, sharpen bool) bool
+
+func (i *Image) Contrast(sharpen bool) bool { return ContrastImage(i, sharpen) }
+
+var EqualizeImage func(i *Image) bool
+
+func (i *Image) Equalize() bool { return EqualizeImage(i) }
+
+var GammaImage func(i *Image, level string) bool
+
+func (i *Image) Gamma(level string) bool { return GammaImage(i, level) }
+
+var LevelImage func(i *Image, levels string) bool
+
+func (i *Image) Level(levels string) bool { return LevelImage(i, levels) }
+
+var LevelImageChannel func(i *Image, channel ChannelType, blackPoint, whitePoint, gamma float64) bool
+
+func (i *Image) LevelChannel(channel ChannelType, blackPoint, whitePoint, gamma float64) bool {
+	return LevelImageChannel(i, channel, blackPoint, whitePoint, gamma)
+}
+
+var ModulateImage func(i *Image, modulate string) bool
+
+func (i *Image) Modulate(modulate string) bool { return ModulateImage(i, modulate) }
+
+var NegateImage func(i *Image, grayscale bool) bool
+
+func (i *Image) Negate(grayscale bool) bool { return NegateImage(i, grayscale) }
+
+var NormalizeImage func(i *Image) bool
+
+func (i *Image) Normalize() bool { return NormalizeImage(i) }

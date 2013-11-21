@@ -1,8 +1,8 @@
 // Copyright (c) 2013 Tony Wilson. All rights reserved.
 // See LICENCE file for permissions and restrictions.
 
-//Package graphicsmagick provides API definitions for
-//accessing CORE_RL_magick_.dll.
+//Package outside-graphicsmagick provides API definitions
+//for accessing CORE_RL_magick_.dll.
 //Based on GraphicsMagick v1.3.8.
 package core
 
@@ -42,8 +42,10 @@ type (
 type (
 	Ascii85Info          struct{}
 	BlobInfo             struct{}
+	CacheInfo            struct{}
 	ImageProfileIterator struct{}
 	SemaphoreInfo        struct{}
+	ThreadViewSet        struct{}
 	ViewInfo             struct{}
 	Void                 struct{}
 )
@@ -76,28 +78,28 @@ func init() {
 var DLL = "CORE_RL_magick_.dll"
 var allApis = Apis{
 	{"AccessCacheViewPixels", &AccessCacheViewPixels},
-	// {"AccessDefaultCacheView", &AccessDefaultCacheView},
+	{"AccessDefaultCacheView", &AccessDefaultCacheView},
 	{"AccessDefinition", &AccessDefinition},
 	{"AccessImmutableIndexes", &AccessImmutableIndexes},
 	{"AccessMutableIndexes", &AccessMutableIndexes},
 	{"AccessMutablePixels", &AccessMutablePixels},
-	// {"AccessThreadViewData", &AccessThreadViewData},
-	// {"AccessThreadViewDataById", &AccessThreadViewDataById},
-	// {"AcquireCacheView", &AcquireCacheView},
+	{"AccessThreadViewData", &AccessThreadViewData},
+	{"AccessThreadViewDataById", &AccessThreadViewDataById},
+	{"AcquireCacheView", &AcquireCacheView},
 	{"AcquireCacheViewIndexes", &AcquireCacheViewIndexes},
 	{"AcquireCacheViewPixels", &AcquireCacheViewPixels},
 	{"AcquireImagePixels", &AcquireImagePixels},
-	// {"AcquireMagickRandomKernel", &AcquireMagickRandomKernel},
+	{"AcquireMagickRandomKernel", &AcquireMagickRandomKernel},
 	{"AcquireMagickResource", &AcquireMagickResource},
-	// {"AcquireMemory", &AcquireMemory},
+	{"AcquireMemory", &AcquireMemory},
 	{"AcquireOneCacheViewPixel", &AcquireOneCacheViewPixel},
 	{"AcquireOnePixel", &AcquireOnePixel},
 	{"AcquireOnePixelByReference", &AcquireOnePixelByReference},
-	// {"AcquireSemaphoreInfo", &AcquireSemaphoreInfo},
-	// {"AcquireString", &AcquireString},
-	// {"AcquireTemporaryFileDescriptor", &AcquireTemporaryFileDescriptor},
-	// {"AcquireTemporaryFileName", &AcquireTemporaryFileName},
-	// {"AcquireTemporaryFileStream", &AcquireTemporaryFileStream},
+	{"AcquireSemaphoreInfo", &AcquireSemaphoreInfo},
+	{"AcquireString", &AcquireString},
+	{"AcquireTemporaryFileDescriptor", &AcquireTemporaryFileDescriptor},
+	{"AcquireTemporaryFileName", &AcquireTemporaryFileName},
+	{"AcquireTemporaryFileStream", &AcquireTemporaryFileStream},
 	{"AdaptiveThresholdImage", &AdaptiveThresholdImage},
 	{"AddDefinition", &AddDefinition},
 	{"AddDefinitions", &AddDefinitions},
@@ -108,36 +110,36 @@ var allApis = Apis{
 	{"AllocateImageColormap", &AllocateImageColormap},
 	{"AllocateImageProfileIterator", &AllocateImageProfileIterator},
 	{"AllocateNextImage", &AllocateNextImage},
-	// {"AllocateSemaphoreInfo", &AllocateSemaphoreInfo},
-	// {"AllocateString", &AllocateString},
-	// {"AllocateThreadViewDataArray", &AllocateThreadViewDataArray},
-	// {"AllocateThreadViewDataSet", &AllocateThreadViewDataSet},
-	// {"AllocateThreadViewSet", &AllocateThreadViewSet},
-	// {"AnimateImageCommand", &AnimateImageCommand},
+	{"AllocateSemaphoreInfo", &AllocateSemaphoreInfo},
+	{"AllocateString", &AllocateString},
+	{"AllocateThreadViewDataArray", &AllocateThreadViewDataArray},
+	{"AllocateThreadViewDataSet", &AllocateThreadViewDataSet},
+	{"AllocateThreadViewSet", &AllocateThreadViewSet},
+	{"AnimateImageCommand", &AnimateImageCommand},
 	{"AnimateImages", &AnimateImages},
 	{"AnnotateImage", &AnnotateImage},
-	// {"AppendImageFormat", &AppendImageFormat},
+	{"AppendImageFormat", &AppendImageFormat},
 	{"AppendImageProfile", &AppendImageProfile},
 	{"AppendImageToList", &AppendImageToList},
 	{"AppendImages", &AppendImages},
-	// {"Ascii85Encode", &Ascii85Encode},
-	// {"Ascii85Flush", &Ascii85Flush},
-	// {"Ascii85Initialize", &Ascii85Initialize},
-	// {"Ascii85WriteByteHook", &Ascii85WriteByteHook},
-	// {"AssignThreadViewData", &AssignThreadViewData},
+	{"Ascii85Encode", &Ascii85Encode},
+	{"Ascii85Flush", &Ascii85Flush},
+	{"Ascii85Initialize", &Ascii85Initialize},
+	{"Ascii85WriteByteHook", &Ascii85WriteByteHook},
+	{"AssignThreadViewData", &AssignThreadViewData},
 	{"AttachBlob", &AttachBlob},
 	{"AutoOrientImage", &AutoOrientImage},
 	{"AverageImages", &AverageImages},
-	// {"Base64Decode", &Base64Decode},
-	// {"Base64Encode", &Base64Encode},
-	// {"BenchmarkImageCommand", &BenchmarkImageCommand},
+	{"Base64Decode", &Base64Decode},
+	{"Base64Encode", &Base64Encode},
+	{"BenchmarkImageCommand", &BenchmarkImageCommand},
 	{"BlackThresholdImage", &BlackThresholdImage},
 	{"BlobIsSeekable", &BlobIsSeekable},
-	// {"BlobModeToString", &BlobModeToString},
+	{"BlobModeToString", &BlobModeToString},
 	{"BlobReserveSize", &BlobReserveSize},
 	{"BlobToFile", &BlobToFile},
 	{"BlobToImage", &BlobToImage},
-	// {"BlobWriteByteHook", &BlobWriteByteHook},
+	{"BlobWriteByteHook", &BlobWriteByteHook},
 	{"BlurImage", &BlurImage},
 	{"BlurImageChannel", &BlurImageChannel},
 	{"BorderImage", &BorderImage},
@@ -146,54 +148,54 @@ var allApis = Apis{
 	{"CdlImage", &CdlImage},
 	{"ChannelImage", &ChannelImage},
 	{"ChannelThresholdImage", &ChannelThresholdImage},
-	// {"ChannelTypeToString", &ChannelTypeToString},
+	{"ChannelTypeToString", &ChannelTypeToString},
 	{"CharcoalImage", &CharcoalImage},
 	{"ChopImage", &ChopImage},
-	// {"ClassTypeToString", &ClassTypeToString},
-	// {"ClipImage", &ClipImage},
+	{"ClassTypeToString", &ClassTypeToString},
+	{"ClipImage", &ClipImage},
 	{"ClipPathImage", &ClipPathImage},
 	{"CloneBlobInfo", &CloneBlobInfo},
-	// {"CloneDrawInfo", &CloneDrawInfo},
+	{"CloneDrawInfo", &CloneDrawInfo},
 	{"CloneImage", &CloneImage},
 	{"CloneImageAttributes", &CloneImageAttributes},
 	{"CloneImageInfo", &CloneImageInfo},
 	{"CloneImageList", &CloneImageList},
-	// {"CloneMemory", &CloneMemory},
+	{"CloneMemory", &CloneMemory},
 	{"CloneMontageInfo", &CloneMontageInfo},
 	{"CloneQuantizeInfo", &CloneQuantizeInfo},
-	// {"CloneString", &CloneString},
-	// {"CloseBlob", &CloseBlob},
-	// {"CloseCacheView", &CloseCacheView},
+	{"CloneString", &CloneString},
+	{"CloseBlob", &CloseBlob},
+	{"CloseCacheView", &CloseCacheView},
 	{"CoalesceImages", &CoalesceImages},
 	{"ColorFloodfillImage", &ColorFloodfillImage},
 	{"ColorMatrixImage", &ColorMatrixImage},
 	{"ColorizeImage", &ColorizeImage},
-	// {"ColorspaceTypeToString", &ColorspaceTypeToString},
-	// {"CompareImageCommand", &CompareImageCommand},
+	{"ColorspaceTypeToString", &ColorspaceTypeToString},
+	{"CompareImageCommand", &CompareImageCommand},
 	{"CompositeImage", &CompositeImage},
-	// {"CompositeImageCommand", &CompositeImageCommand},
-	// {"CompositeImageRegion", &CompositeImageRegion},
-	// {"CompositeOperatorToString", &CompositeOperatorToString},
+	{"CompositeImageCommand", &CompositeImageCommand},
+	{"CompositeImageRegion", &CompositeImageRegion},
+	{"CompositeOperatorToString", &CompositeOperatorToString},
 	{"CompressImageColormap", &CompressImageColormap},
-	// {"CompressionTypeToString", &CompressionTypeToString},
-	// {"ConcatenateString", &ConcatenateString},
-	// {"ConfirmAccessModeToString", &ConfirmAccessModeToString},
-	// {"ConjureImageCommand", &ConjureImageCommand},
+	{"CompressionTypeToString", &CompressionTypeToString},
+	{"ConcatenateString", &ConcatenateString},
+	{"ConfirmAccessModeToString", &ConfirmAccessModeToString},
+	{"ConjureImageCommand", &ConjureImageCommand},
 	{"ConstituteImage", &ConstituteImage},
 	{"ConstituteTextureImage", &ConstituteTextureImage},
-	// {"ContinueTimer", &ContinueTimer},
-	// {"Contrast", &Contrast},
+	{"ContinueTimer", &ContinueTimer},
+	{"Contrast", &Contrast},
 	{"ContrastImage", &ContrastImage},
-	// {"ConvertImageCommand", &ConvertImageCommand},
+	{"ConvertImageCommand", &ConvertImageCommand},
 	{"ConvolveImage", &ConvolveImage},
 	{"CopyException", &CopyException},
 	{"CropImage", &CropImage},
-	// {"CropImageToHBITMAP", &CropImageToHBITMAP},
+	{"CropImageToHBITMAP", &CropImageToHBITMAP},
 	{"CycleColormapImage", &CycleColormapImage},
 	{"DeallocateImageProfileIterator", &DeallocateImageProfileIterator},
 	{"DeconstructImages", &DeconstructImages},
-	// {"DefineClientName", &DefineClientName},
-	// {"DefineClientPathAndName", &DefineClientPathAndName},
+	{"DefineClientName", &DefineClientName},
+	{"DefineClientPathAndName", &DefineClientPathAndName},
 	{"DeleteImageFromList", &DeleteImageFromList},
 	{"DeleteImageProfile", &DeleteImageProfile},
 	{"DeleteMagickRegistry", &DeleteMagickRegistry},
@@ -201,43 +203,43 @@ var allApis = Apis{
 	{"DespeckleImage", &DespeckleImage},
 	{"DestroyBlob", &DestroyBlob},
 	{"DestroyBlobInfo", &DestroyBlobInfo},
-	// {"DestroyColorInfo", &DestroyColorInfo},
-	// {"DestroyConstitute", &DestroyConstitute},
-	// {"DestroyDelegateInfo", &DestroyDelegateInfo},
-	// {"DestroyDrawInfo", &DestroyDrawInfo},
+	{"DestroyColorInfo", &DestroyColorInfo},
+	{"DestroyConstitute", &DestroyConstitute},
+	{"DestroyDelegateInfo", &DestroyDelegateInfo},
+	{"DestroyDrawInfo", &DestroyDrawInfo},
 	{"DestroyExceptionInfo", &DestroyExceptionInfo},
 	{"DestroyImage", &DestroyImage},
 	{"DestroyImageAttributes", &DestroyImageAttributes},
 	{"DestroyImageInfo", &DestroyImageInfo},
 	{"DestroyImageList", &DestroyImageList},
-	// {"DestroyImagePixels", &DestroyImagePixels},
-	// {"DestroyLogInfo", &DestroyLogInfo},
+	{"DestroyImagePixels", &DestroyImagePixels},
+	{"DestroyLogInfo", &DestroyLogInfo},
 	{"DestroyMagicInfo", &DestroyMagicInfo},
 	{"DestroyMagick", &DestroyMagick},
-	// {"DestroyMagickModules", &DestroyMagickModules},
-	// {"DestroyMagickResources", &DestroyMagickResources},
-	// {"DestroyModuleInfo", &DestroyModuleInfo},
+	{"DestroyMagickModules", &DestroyMagickModules},
+	{"DestroyMagickResources", &DestroyMagickResources},
+	{"DestroyModuleInfo", &DestroyModuleInfo},
 	{"DestroyMontageInfo", &DestroyMontageInfo},
 	{"DestroyQuantizeInfo", &DestroyQuantizeInfo},
-	// {"DestroySemaphore", &DestroySemaphore},
-	// {"DestroySemaphoreInfo", &DestroySemaphoreInfo},
-	// {"DestroyTemporaryFiles", &DestroyTemporaryFiles},
-	// {"DestroyThreadViewDataSet", &DestroyThreadViewDataSet},
-	// {"DestroyThreadViewSet", &DestroyThreadViewSet},
-	// {"DestroyTypeInfo", &DestroyTypeInfo},
+	{"DestroySemaphore", &DestroySemaphore},
+	{"DestroySemaphoreInfo", &DestroySemaphoreInfo},
+	{"DestroyTemporaryFiles", &DestroyTemporaryFiles},
+	{"DestroyThreadViewDataSet", &DestroyThreadViewDataSet},
+	{"DestroyThreadViewSet", &DestroyThreadViewSet},
+	{"DestroyTypeInfo", &DestroyTypeInfo},
 	{"DetachBlob", &DetachBlob},
 	{"DifferenceImage", &DifferenceImage},
 	{"DispatchImage", &DispatchImage},
-	// {"DisplayImageCommand", &DisplayImageCommand},
+	{"DisplayImageCommand", &DisplayImageCommand},
 	{"DisplayImages", &DisplayImages},
 	{"DrawAffine", &DrawAffine},
-	// {"DrawAffineImage", &DrawAffineImage},
+	{"DrawAffineImage", &DrawAffineImage},
 	{"DrawAllocateContext", &DrawAllocateContext},
 	{"DrawAnnotation", &DrawAnnotation},
 	{"DrawArc", &DrawArc},
 	{"DrawBezier", &DrawBezier},
 	{"DrawCircle", &DrawCircle},
-	// {"DrawClipPath", &DrawClipPath},
+	{"DrawClipPath", &DrawClipPath},
 	{"DrawColor", &DrawColor},
 	{"DrawComment", &DrawComment},
 	{"DrawComposite", &DrawComposite},
@@ -269,7 +271,7 @@ var allApis = Apis{
 	{"DrawGetTextDecoration", &DrawGetTextDecoration},
 	{"DrawGetTextEncoding", &DrawGetTextEncoding},
 	{"DrawGetTextUnderColor", &DrawGetTextUnderColor},
-	// {"DrawImage", &DrawImage},
+	{"DrawImage", &DrawImage},
 	{"DrawLine", &DrawLine},
 	{"DrawMatte", &DrawMatte},
 	{"DrawPathClose", &DrawPathClose},
@@ -293,7 +295,7 @@ var allApis = Apis{
 	{"DrawPathMoveToAbsolute", &DrawPathMoveToAbsolute},
 	{"DrawPathMoveToRelative", &DrawPathMoveToRelative},
 	{"DrawPathStart", &DrawPathStart},
-	// {"DrawPatternPath", &DrawPatternPath},
+	{"DrawPatternPath", &DrawPatternPath},
 	{"DrawPeekGraphicContext", &DrawPeekGraphicContext},
 	{"DrawPoint", &DrawPoint},
 	{"DrawPolygon", &DrawPolygon},
@@ -346,19 +348,19 @@ var allApis = Apis{
 	{"DrawSkewX", &DrawSkewX},
 	{"DrawSkewY", &DrawSkewY},
 	{"DrawTranslate", &DrawTranslate},
-	// {"EOFBlob", &EOFBlob},
+	{"EOFBlob", &EOFBlob},
 	{"EdgeImage", &EdgeImage},
 	{"EmbossImage", &EmbossImage},
-	// {"EndianTypeToString", &EndianTypeToString},
+	{"EndianTypeToString", &EndianTypeToString},
 	{"EnhanceImage", &EnhanceImage},
 	{"EqualizeImage", &EqualizeImage},
-	// {"EscapeString", &EscapeString},
-	// {"ExecuteModuleProcess", &ExecuteModuleProcess},
-	// {"ExecuteStaticModuleProcess", &ExecuteStaticModuleProcess},
-	// {"Exit", &Exit},
-	// {"ExpandAffine", &ExpandAffine},
-	// {"ExpandFilename", &ExpandFilename},
-	// {"ExpandFilenames", &ExpandFilenames},
+	{"EscapeString", &EscapeString},
+	{"ExecuteModuleProcess", &ExecuteModuleProcess},
+	{"ExecuteStaticModuleProcess", &ExecuteStaticModuleProcess},
+	{"Exit", &Exit},
+	{"ExpandAffine", &ExpandAffine},
+	{"ExpandFilename", &ExpandFilename},
+	{"ExpandFilenames", &ExpandFilenames},
 	{"ExportImageChannel", &ExportImageChannel},
 	{"ExportImagePixelArea", &ExportImagePixelArea},
 	{"ExportPixelAreaOptionsInit", &ExportPixelAreaOptionsInit},
@@ -369,47 +371,47 @@ var allApis = Apis{
 	{"FlattenImages", &FlattenImages},
 	{"FlipImage", &FlipImage},
 	{"FlopImage", &FlopImage},
-	// {"FormatSize", &FormatSize},
-	// {"FormatString", &FormatString},
-	// {"FormatStringList", &FormatStringList},
+	{"FormatSize", &FormatSize},
+	{"FormatString", &FormatString},
+	{"FormatStringList", &FormatStringList},
 	{"FrameImage", &FrameImage},
-	// {"FuzzyColorMatch", &FuzzyColorMatch},
-	// {"GMCommand", &GMCommand},
+	{"FuzzyColorMatch", &FuzzyColorMatch},
+	{"GMCommand", &GMCommand},
 	{"GammaImage", &GammaImage},
 	{"GaussianBlurImage", &GaussianBlurImage},
 	{"GaussianBlurImageChannel", &GaussianBlurImageChannel},
-	// {"GenerateDifferentialNoise", &GenerateDifferentialNoise},
-	// {"GenerateNoise", &GenerateNoise},
+	{"GenerateDifferentialNoise", &GenerateDifferentialNoise},
+	{"GenerateNoise", &GenerateNoise},
 	{"GetBlobFileHandle", &GetBlobFileHandle},
 	{"GetBlobInfo", &GetBlobInfo},
-	// {"GetBlobIsOpen", &GetBlobIsOpen},
-	// {"GetBlobSize", &GetBlobSize},
+	{"GetBlobIsOpen", &GetBlobIsOpen},
+	{"GetBlobSize", &GetBlobSize},
 	{"GetBlobStatus", &GetBlobStatus},
 	{"GetBlobStreamData", &GetBlobStreamData},
 	{"GetBlobTemporary", &GetBlobTemporary},
-	// {"GetCacheView", &GetCacheView},
+	{"GetCacheView", &GetCacheView},
 	{"GetCacheViewArea", &GetCacheViewArea},
 	{"GetCacheViewIndexes", &GetCacheViewIndexes},
 	{"GetCacheViewPixels", &GetCacheViewPixels},
 	{"GetCacheViewRegion", &GetCacheViewRegion},
-	// {"GetClientFilename", &GetClientFilename},
-	// {"GetClientName", &GetClientName},
-	// {"GetClientPath", &GetClientPath},
+	{"GetClientFilename", &GetClientFilename},
+	{"GetClientName", &GetClientName},
+	{"GetClientPath", &GetClientPath},
 	{"GetColorHistogram", &GetColorHistogram},
-	// {"GetColorInfo", &GetColorInfo},
-	// {"GetColorInfoArray", &GetColorInfoArray},
-	// {"GetColorList", &GetColorList},
-	// {"GetColorTuple", &GetColorTuple},
+	{"GetColorInfo", &GetColorInfo},
+	{"GetColorInfoArray", &GetColorInfoArray},
+	{"GetColorList", &GetColorList},
+	{"GetColorTuple", &GetColorTuple},
 	{"GetConfigureBlob", &GetConfigureBlob},
-	// {"GetDelegateCommand", &GetDelegateCommand},
-	// {"GetDelegateInfo", &GetDelegateInfo},
-	// {"GetDrawInfo", &GetDrawInfo},
-	// {"GetElapsedTime", &GetElapsedTime},
+	{"GetDelegateCommand", &GetDelegateCommand},
+	{"GetDelegateInfo", &GetDelegateInfo},
+	{"GetDrawInfo", &GetDrawInfo},
+	{"GetElapsedTime", &GetElapsedTime},
 	{"GetExceptionInfo", &GetExceptionInfo},
-	// {"GetExecutionPath", &GetExecutionPath},
-	// {"GetExecutionPathUsingName", &GetExecutionPathUsingName},
+	{"GetExecutionPath", &GetExecutionPath},
+	{"GetExecutionPathUsingName", &GetExecutionPathUsingName},
 	{"GetFirstImageInList", &GetFirstImageInList},
-	// {"GetGeometry", &GetGeometry},
+	{"GetGeometry", &GetGeometry},
 	{"GetImageAttribute", &GetImageAttribute},
 	// {"GetImageBoundingBox", &GetImageBoundingBox},
 	{"GetImageChannelDepth", &GetImageChannelDepth},
@@ -986,11 +988,11 @@ type Image struct {
 	Taint_          uint
 	ClipMask_       *Image
 	Ping            MagickBooleanType
-	Cache           *Void // *CacheInfo
-	DefaultViews    *Void // *ThreadViewSet
-	Attributes      *Void //  *ImageAttribute
+	Cache           *CacheInfo
+	DefaultViews    *ThreadViewSet
+	Attributes      *ImageAttribute
 	Ascii85         *Ascii85Info
-	Blob            *Void // *BlobInfo
+	Blob            *BlobInfo
 	ReferenceCount_ SSize
 	Semaphore       *SemaphoreInfo
 	Logging         uint
@@ -3909,3 +3911,338 @@ func (i *Image) Shave(shaveInfo *RectangleInfo, exception *ExceptionInfo) *Image
 }
 
 var TransformImage func(image **Image, cropGeometry, imageGeometry string) bool
+
+//============== Undocumented ==========================
+
+type ThreadViewDataSet struct {
+	ViewData   **Void
+	Destructor MagickFreeFunc
+	NViews     uint
+}
+
+type MagickRandomKernel struct {
+	z, w uint32
+}
+
+type FileIOMode Enum
+
+const (
+	BinaryFileIOMode FileIOMode = iota
+	TextFileIOMode
+)
+
+type BlobMode Enum
+
+const (
+	UndefinedBlobMode BlobMode = iota
+	ReadBlobMode
+	ReadBinaryBlobMode
+	WriteBlobMode
+	WriteBinaryBlobMode
+)
+
+type CompositeOptions struct {
+	PercentBrightness, Amount, Threshold float64
+}
+
+type ColorInfo struct {
+	Path           *VString
+	Name           *VString
+	Compliance     ComplianceType
+	Color          PixelPacket
+	Stealth        uint
+	Signature      Size
+	Previous, Next *ColorInfo
+}
+type ComplianceType Enum
+
+const (
+	SVGCompliance ComplianceType = 1 << iota
+	X11Compliance
+	XPMCompliance
+	UndefinedCompliance ComplianceType = 0x0000
+	NoCompliance                       = UndefinedCompliance
+	AllCompliance       ComplianceType = 0xffff
+)
+
+type MagickPixelPacket struct {
+	Colorspace                ColorspaceType
+	Matte                     uint
+	Red, Green, Blue, Opacity Quantum
+	Index                     IndexPacket
+}
+
+type DelegateInfo struct {
+	Path, Decode, Encode, Commands *VString
+	Mode                           int
+	Stealth                        MagickBooleanType
+	Signature                      Size
+	Previous, Next                 *DelegateInfo
+}
+
+var AccessDefaultCacheView func(i *Image) *ViewInfo
+
+func (i *Image) AccessDefaultCacheView() *ViewInfo { return AccessDefaultCacheView(i) }
+
+var AccessThreadViewData func(t *ThreadViewDataSet) *Void
+
+func (t *ThreadViewDataSet) Access() *Void { return AccessThreadViewData(t) }
+
+var AccessThreadViewDataById func(t *ThreadViewDataSet, index uint) *Void
+
+func (t *ThreadViewDataSet) AccessById(index uint) *Void {
+	return AccessThreadViewDataById(t, index)
+}
+
+var AcquireCacheView func(i *Image) *ViewInfo
+
+func (i *Image) AcquireCacheView() *ViewInfo { return AcquireCacheView(i) }
+
+var AcquireMagickRandomKernel func() *MagickRandomKernel
+var AcquireMemory func(size Size) *Void
+var AcquireSemaphoreInfo func(s **SemaphoreInfo)
+var AcquireString func(source string) string
+var AcquireTemporaryFileDescriptor func(filename string) int
+var AcquireTemporaryFileName func(filename string) bool
+var AcquireTemporaryFileStream func(filename string, mode FileIOMode) *FILE
+var AllocateSemaphoreInfo func() *SemaphoreInfo
+
+var AllocateString func(source string) string
+var AllocateThreadViewDataArray func(i *Image, exception *ExceptionInfo, count, size uint32) *ThreadViewDataSet
+
+func (i *Image) AllocateThreadViewDataArray(exception *ExceptionInfo, count, size uint32) *ThreadViewDataSet {
+	return AllocateThreadViewDataArray(i, exception, count, size)
+}
+
+var AllocateThreadViewDataSet func(destructor MagickFreeFunc, image *Image, exception *ExceptionInfo) *ThreadViewDataSet
+var AllocateThreadViewSet func(i *Image, exception *ExceptionInfo) *ThreadViewSet
+
+func (i *Image) AllocateThreadViewSet(exception *ExceptionInfo) *ThreadViewSet {
+	return AllocateThreadViewSet(i, exception)
+}
+
+var AnimateImageCommand func(i *ImageInfo, argc int, argv, metadata []string, exception *ExceptionInfo) uint
+
+func (i *ImageInfo) AnimateImageCommand(argc int, argv, metadata []string, exception *ExceptionInfo) uint {
+	return AnimateImageCommand(i, argc, argv, metadata, exception)
+}
+
+var AppendImageFormat func(format, filename string)
+
+var Ascii85Encode func(i *Image, code byte)
+
+func (i *Image) Ascii85Encode(code byte) { Ascii85Encode(i, code) }
+
+var Ascii85Flush func(i *Image)
+
+func (i *Image) Ascii85Flush() { Ascii85Flush(i) }
+
+var Ascii85Initialize func(i *Image)
+
+func (i *Image) Ascii85Initialize() { Ascii85Initialize(i) }
+
+var Ascii85WriteByteHook func(i *Image, code byte, info *Void) uint
+
+func (i *Image) Ascii85WriteByteHook(code byte, info *Void) uint {
+	return Ascii85WriteByteHook(i, code, info)
+}
+
+var AssignThreadViewData func(t *ThreadViewDataSet, index uint, data *Void)
+
+func (t *ThreadViewDataSet) Assign(index uint, data *Void) { AssignThreadViewData(t, index, data) }
+
+var Base64Decode func(source string, length *Size) *byte
+var Base64Encode func(blob *byte, blobLength Size, encodeLength *Size) string
+var BenchmarkImageCommand func(i *ImageInfo, argc int, argv, metadata []string, exception *ExceptionInfo) uint
+
+func (i *ImageInfo) BenchmarkImageCommand(argc int, argv, metadata []string, exception *ExceptionInfo) uint {
+	return BenchmarkImageCommand(i, argc, argv, metadata, exception)
+}
+
+var BlobModeToString func(blobMode BlobMode) string
+
+var BlobWriteByteHook func(i *Image, code byte, info *Void) uint
+
+func (i *Image) BlobWriteByteHook(code byte, info *Void) uint {
+	return BlobWriteByteHook(i, code, info)
+}
+
+var ChannelTypeToString func(channel ChannelType) string
+var ClassTypeToString func(classType ClassType) string
+var ClipImage func(i *Image) bool
+
+func (i *Image) Clip() bool { return ClipImage(i) }
+
+var CloneDrawInfo func(i *ImageInfo, drawInfo *DrawInfo) *DrawInfo
+
+func (i *ImageInfo) CloneDrawInfo(drawInfo *DrawInfo) *DrawInfo { return CloneDrawInfo(i, drawInfo) }
+
+var CloneMemory func(destination *Void, source *Void, size Size) *Void
+var CloneString func(destination **Char, source string) string
+var CloseBlob func(i *Image) bool
+
+func (i *Image) CloseBlob() bool { return CloseBlob(i) }
+
+var CloseCacheView func(c *ViewInfo) *ViewInfo
+
+func (c *ViewInfo) Close() *ViewInfo { return CloseCacheView(c) }
+
+var ColorspaceTypeToString func(colorspace ColorspaceType) string
+var CompareImageCommand func(i *ImageInfo, argc int, argv, metadata []string, exception *ExceptionInfo) uint
+
+func (i *ImageInfo) CompareImageCommand(argc int, argv, metadata []string, exception *ExceptionInfo) uint {
+	return CompareImageCommand(i, argc, argv, metadata, exception)
+}
+
+var CompositeImageCommand func(i *ImageInfo, argc int, argv, metadata []string, exception *ExceptionInfo) uint
+
+func (i *ImageInfo) CompositeImageCommand(argc int, argv, metadata []string, exception *ExceptionInfo) uint {
+	return CompositeImageCommand(i, argc, argv, metadata, exception)
+}
+
+var CompositeImageRegion func(compose CompositeOperator, options *CompositeOptions, columns, rows Size, updateImage *Image, updateX, updateY SSize, canvasImage *Image, canvasX, canvasY SSize, exception *ExceptionInfo) bool
+var CompositeOperatorToString func(compositeOp CompositeOperator) string
+var CompressionTypeToString func(compressionType CompressionType) string
+var ConcatenateString func(destination **Char, source string) bool
+var ConfirmAccessModeToString func(accessMode ConfirmAccessMode) string
+var ConjureImageCommand func(i *ImageInfo, argc int, argv, metadata []string, exception *ExceptionInfo) uint
+
+func (i *ImageInfo) ConjureImageCommand(argc int, argv, metadata []string, exception *ExceptionInfo) uint {
+	return ConjureImageCommand(i, argc, argv, metadata, exception)
+}
+
+var ContinueTimer func(t *TimerInfo) bool
+
+func (t *TimerInfo) Continue() bool { return ContinueTimer(t) }
+
+var Contrast func(int, *Quantum, *Quantum, *Quantum)
+var ConvertImageCommand func(*ImageInfo, int, []string, []string, *ExceptionInfo) bool
+
+func (i *ImageInfo) ConvertImageCommand(a2 int, a3, a4 []string, a5 *ExceptionInfo) bool {
+	return ConvertImageCommand(i, a2, a3, a4, a5)
+}
+
+var CropImageToHBITMAP func(i *Image, r *RectangleInfo, e *ExceptionInfo) *Void
+
+func (i *Image) CropToHBITMAP(r *RectangleInfo, e *ExceptionInfo) *Void {
+	return CropImageToHBITMAP(i, r, e)
+}
+
+var DefineClientName func(string)
+var DefineClientPathAndName func(string)
+var DestroyColorInfo func()
+var DestroyConstitute func()
+var DestroyDelegateInfo func()
+var DestroyDrawInfo func(d *DrawInfo) *DrawInfo
+
+func (d *DrawInfo) Destroy() *DrawInfo { return DestroyDrawInfo(d) }
+
+var DestroyImagePixels func(i *Image)
+
+func (i *Image) DestroyPixels() { DestroyImagePixels(i) }
+
+var DestroyLogInfo func()
+var DestroyMagickModules func()
+var DestroyMagickResources func()
+var DestroyModuleInfo func()
+var DestroySemaphore func()
+var DestroySemaphoreInfo func(s *SemaphoreInfo) *SemaphoreInfo
+
+func (s *SemaphoreInfo) Destroy() *SemaphoreInfo { return DestroySemaphoreInfo(s) }
+
+var DestroyTemporaryFiles func()
+var DestroyThreadViewDataSet func(t *ThreadViewDataSet)
+
+func (t *ThreadViewDataSet) Destroy() { DestroyThreadViewDataSet(t) }
+
+var DestroyThreadViewSet func(viewSet *ThreadViewSet)
+var DestroyTypeInfo func()
+var DisplayImageCommand func(*ImageInfo, int, []string, []string, *ExceptionInfo) bool
+
+func (i *ImageInfo) DisplayImageCommand(a2 int, a3, a4 []string, a5 *ExceptionInfo) bool {
+	return DisplayImageCommand(i, a2, a3, a4, a5)
+}
+
+var DrawAffineImage func(i *Image, source *Image, affine *AffineMatrix) bool
+
+func (i *Image) DrawAffine(source *Image, affine *AffineMatrix) bool {
+	return DrawAffineImage(i, source, affine)
+}
+
+var DrawClipPath func(i *Image, drawInfo *DrawInfo, name string) bool
+
+func (i *Image) DrawClipPath(drawInfo *DrawInfo, name string) bool {
+	return DrawClipPath(i, drawInfo, name)
+}
+
+var DrawImage func(i *Image, drawInfo *DrawInfo) bool
+
+func (i *Image) Draw(drawInfo *DrawInfo) bool { return DrawImage(i, drawInfo) }
+
+var DrawPatternPath func(i *Image, drawInfo *DrawInfo, name string, pattern **Image) bool
+
+func (i *Image) DrawPatternPath(drawInfo *DrawInfo, name string, pattern **Image) bool {
+	return DrawPatternPath(i, drawInfo, name, pattern)
+}
+
+var EOFBlob func(i *Image) int
+
+func (i *Image) EOFBlob() int { return EOFBlob(i) }
+
+var EndianTypeToString func(endianType EndianType) string
+var EscapeString func(source string, escape int8) string
+var ExecuteModuleProcess func(tag string, image **Image, argc int, argv []string) bool
+var ExecuteStaticModuleProcess func(string, **Image, int, []string) bool
+var Exit func(int) int
+var ExpandAffine func(affine *AffineMatrix) float64
+var ExpandFilename func(path string)
+var ExpandFilenames func(argc *int, argv *[]string) bool
+var FormatSize func(size int64, format string)
+var FormatString func(str, format string, va ...VArg)
+var FormatStringList func(str, format string, operands VAList)
+var FuzzyColorMatch func(p, q *PixelPacket, fuzz float64) uint
+var GMCommand func(argc int, argv []string) int
+var GenerateDifferentialNoise func(quantumPixel Quantum, noiseType NoiseType, kernel *MagickRandomKernel) float64
+var GenerateNoise func(Quantum, NoiseType) Quantum
+var GetBlobIsOpen func(i *Image) bool
+
+func (i *Image) BlobIsOpen() bool { return GetBlobIsOpen(i) }
+
+var GetBlobSize func(i *Image) MagickSizeType
+
+func (i *Image) BlobSize() MagickSizeType { return GetBlobSize(i) }
+
+var GetCacheView func(c *ViewInfo, x, y SSize, columns, rows Size) *PixelPacket
+
+func (c *ViewInfo) Get(x, y SSize, columns, rows Size) *PixelPacket {
+	return GetCacheView(c, x, y, columns, rows)
+}
+
+var GetClientFilename func() string
+var GetClientName func() string
+var GetClientPath func() string
+var GetColorInfo func(name string, exception *ExceptionInfo) *ColorInfo
+var GetColorInfoArray func(exception *ExceptionInfo) []*ColorInfo
+var GetColorList func(pattern string, numberColors *Size, exception *ExceptionInfo) []string
+var GetColorTuple func(m *MagickPixelPacket, hex bool, tuple string)
+
+func (m *MagickPixelPacket) ColorTuple(hex bool, tuple string) { GetColorTuple(m, hex, tuple) }
+
+var GetDelegateCommand func(i *ImageInfo, image *Image, decode, encode string, exception *ExceptionInfo) string
+
+func (i *ImageInfo) DelegateCommand(image *Image, decode, encode string, exception *ExceptionInfo) string {
+	return GetDelegateCommand(i, image, decode, encode, exception)
+}
+
+var GetDelegateInfo func(decode, encode string, exception *ExceptionInfo) *DelegateInfo
+var GetDrawInfo func(i *ImageInfo, drawInfo *DrawInfo)
+
+func (i *ImageInfo) DrawInfo(drawInfo *DrawInfo) { GetDrawInfo(i, drawInfo) }
+
+var GetElapsedTime func(t *TimerInfo) float64
+
+func (t *TimerInfo) ElapsedTime() float64 { return GetElapsedTime(t) }
+
+var GetExecutionPath func(path string, extent uint32) bool
+var GetExecutionPathUsingName func(string) bool
+var GetGeometry func(geometry string, x, y *SSize, width, height *Size) MagickStatusType

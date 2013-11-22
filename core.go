@@ -21,12 +21,9 @@ const (
 type (
 	fix uintptr
 
-	FILE fix
-
-	PathOperation fix
-	PathMode      fix
-	PaintMethod   fix
-	NoiseType     fix
+	dirent fix
+	DIR    fix
+	FILE   fix
 
 	Char              byte
 	Enum              int
@@ -43,11 +40,16 @@ type (
 	Ascii85Info          struct{}
 	BlobInfo             struct{}
 	CacheInfo            struct{}
+	GSMainInstance       struct{}
 	ImageProfileIterator struct{}
+	MagickMap            struct{}
 	SemaphoreInfo        struct{}
 	ThreadViewSet        struct{}
 	ViewInfo             struct{}
 	Void                 struct{}
+
+	MagickTsdKey *struct{} // threading dependent
+
 )
 
 type (
@@ -413,14 +415,14 @@ var allApis = Apis{
 	{"GetFirstImageInList", &GetFirstImageInList},
 	{"GetGeometry", &GetGeometry},
 	{"GetImageAttribute", &GetImageAttribute},
-	// {"GetImageBoundingBox", &GetImageBoundingBox},
+	{"GetImageBoundingBox", &GetImageBoundingBox},
 	{"GetImageChannelDepth", &GetImageChannelDepth},
 	{"GetImageChannelDifference", &GetImageChannelDifference},
 	{"GetImageChannelDistortion", &GetImageChannelDistortion},
-	// {"GetImageCharacteristics", &GetImageCharacteristics},
+	{"GetImageCharacteristics", &GetImageCharacteristics},
 	{"GetImageClipMask", &GetImageClipMask},
 	{"GetImageClippingPathAttribute", &GetImageClippingPathAttribute},
-	// {"GetImageDepth", &GetImageDepth},
+	{"GetImageDepth", &GetImageDepth},
 	{"GetImageDistortion", &GetImageDistortion},
 	{"GetImageException", &GetImageException},
 	{"GetImageFromList", &GetImageFromList},
@@ -428,7 +430,7 @@ var allApis = Apis{
 	{"GetImageGeometry", &GetImageGeometry},
 	{"GetImageIndexInList", &GetImageIndexInList},
 	{"GetImageInfo", &GetImageInfo},
-	// {"GetImageInfoAttribute", &GetImageInfoAttribute},
+	{"GetImageInfoAttribute", &GetImageInfoAttribute},
 	{"GetImageListLength", &GetImageListLength},
 	{"GetImageMagick", &GetImageMagick},
 	{"GetImagePixels", &GetImagePixels},
@@ -436,284 +438,284 @@ var allApis = Apis{
 	{"GetImageProfile", &GetImageProfile},
 	{"GetImageQuantizeError", &GetImageQuantizeError},
 	{"GetImageStatistics", &GetImageStatistics},
-	// {"GetImageType", &GetImageType},
+	{"GetImageType", &GetImageType},
 	{"GetImageVirtualPixelMethod", &GetImageVirtualPixelMethod},
 	{"GetIndexes", &GetIndexes},
 	{"GetLastImageInList", &GetLastImageInList},
 	{"GetLocaleExceptionMessage", &GetLocaleExceptionMessage},
-	// {"GetLocaleMessage", &GetLocaleMessage},
-	// {"GetLocaleMessageFromID", &GetLocaleMessageFromID},
-	// {"GetMagickCopyright", &GetMagickCopyright},
-	// {"GetMagickDimension", &GetMagickDimension},
-	// {"GetMagickFileFormat", &GetMagickFileFormat},
-	// {"GetMagickGeometry", &GetMagickGeometry},
+	{"GetLocaleMessage", &GetLocaleMessage},
+	{"GetLocaleMessageFromID", &GetLocaleMessageFromID},
+	{"GetMagickCopyright", &GetMagickCopyright},
+	{"GetMagickDimension", &GetMagickDimension},
+	{"GetMagickFileFormat", &GetMagickFileFormat},
+	{"GetMagickGeometry", &GetMagickGeometry},
 	{"GetMagickInfo", &GetMagickInfo},
 	{"GetMagickInfoArray", &GetMagickInfoArray},
 	{"GetMagickRegistry", &GetMagickRegistry},
 	{"GetMagickResource", &GetMagickResource},
 	{"GetMagickResourceLimit", &GetMagickResourceLimit},
-	// {"GetMagickVersion", &GetMagickVersion},
-	// {"GetMagickWebSite", &GetMagickWebSite},
-	// {"GetModuleInfo", &GetModuleInfo},
+	{"GetMagickVersion", &GetMagickVersion},
+	{"GetMagickWebSite", &GetMagickWebSite},
+	{"GetModuleInfo", &GetModuleInfo},
 	{"GetMontageInfo", &GetMontageInfo},
 	{"GetNextImageInList", &GetNextImageInList},
 	{"GetNumberColors", &GetNumberColors},
 	{"GetOnePixel", &GetOnePixel},
-	// {"GetOptimalKernelWidth", &GetOptimalKernelWidth},
-	// {"GetOptimalKernelWidth1D", &GetOptimalKernelWidth1D},
-	// {"GetOptimalKernelWidth2D", &GetOptimalKernelWidth2D},
-	// {"GetPageGeometry", &GetPageGeometry},
-	// {"GetPathComponent", &GetPathComponent},
-	// {"GetPixelCacheArea", &GetPixelCacheArea},
+	{"GetOptimalKernelWidth", &GetOptimalKernelWidth},
+	{"GetOptimalKernelWidth1D", &GetOptimalKernelWidth1D},
+	{"GetOptimalKernelWidth2D", &GetOptimalKernelWidth2D},
+	{"GetPageGeometry", &GetPageGeometry},
+	{"GetPathComponent", &GetPathComponent},
+	{"GetPixelCacheArea", &GetPixelCacheArea},
 	{"GetPixels", &GetPixels},
-	// {"GetPostscriptDelegateInfo", &GetPostscriptDelegateInfo},
+	{"GetPostscriptDelegateInfo", &GetPostscriptDelegateInfo},
 	{"GetPreviousImageInList", &GetPreviousImageInList},
 	{"GetQuantizeInfo", &GetQuantizeInfo},
 	{"GetSignatureInfo", &GetSignatureInfo},
-	// {"GetThreadViewDataSetAllocatedViews", &GetThreadViewDataSetAllocatedViews},
-	// {"GetTimerInfo", &GetTimerInfo},
-	// {"GetTimerResolution", &GetTimerResolution},
-	// {"GetToken", &GetToken},
-	// {"GetTypeInfo", &GetTypeInfo},
-	// {"GetTypeInfoByFamily", &GetTypeInfoByFamily},
-	// {"GetTypeList", &GetTypeList},
+	{"GetThreadViewDataSetAllocatedViews", &GetThreadViewDataSetAllocatedViews},
+	{"GetTimerInfo", &GetTimerInfo},
+	{"GetTimerResolution", &GetTimerResolution},
+	{"GetToken", &GetToken},
+	{"GetTypeInfo", &GetTypeInfo},
+	{"GetTypeInfoByFamily", &GetTypeInfoByFamily},
+	{"GetTypeList", &GetTypeList},
 	{"GetTypeMetrics", &GetTypeMetrics},
-	// {"GetUserTime", &GetUserTime},
-	// {"GlobExpression", &GlobExpression},
-	// {"GradientImage", &GradientImage},
+	{"GetUserTime", &GetUserTime},
+	{"GlobExpression", &GlobExpression},
+	{"GradientImage", &GradientImage},
 	{"GrayscalePseudoClassImage", &GrayscalePseudoClassImage},
-	// {"HSLTransform", &HSLTransform},
-	// {"HWBTransform", &HWBTransform},
+	{"HSLTransform", &HSLTransform},
+	{"HWBTransform", &HWBTransform},
 	{"HaldClutImage", &HaldClutImage},
-	// {"HighlightStyleToString", &HighlightStyleToString},
-	// {"HuffmanDecodeImage", &HuffmanDecodeImage},
-	// {"HuffmanEncode2Image", &HuffmanEncode2Image},
-	// {"HuffmanEncodeImage", &HuffmanEncodeImage},
-	// {"Hull", &Hull},
-	// {"IdentifyImageCommand", &IdentifyImageCommand},
-	// {"IdentityAffine", &IdentityAffine},
+	{"HighlightStyleToString", &HighlightStyleToString},
+	{"HuffmanDecodeImage", &HuffmanDecodeImage},
+	{"HuffmanEncode2Image", &HuffmanEncode2Image},
+	{"HuffmanEncodeImage", &HuffmanEncodeImage},
+	{"Hull", &Hull},
+	{"IdentifyImageCommand", &IdentifyImageCommand},
+	{"IdentityAffine", &IdentityAffine},
 	{"ImageListToArray", &ImageListToArray},
 	{"ImageToBlob", &ImageToBlob},
 	{"ImageToFile", &ImageToFile},
-	// {"ImageToHBITMAP", &ImageToHBITMAP},
-	// {"ImageToHuffman2DBlob", &ImageToHuffman2DBlob},
-	// {"ImageToJPEGBlob", &ImageToJPEGBlob},
-	// {"ImageTypeToString", &ImageTypeToString},
+	{"ImageToHBITMAP", &ImageToHBITMAP},
+	{"ImageToHuffman2DBlob", &ImageToHuffman2DBlob},
+	{"ImageToJPEGBlob", &ImageToJPEGBlob},
+	{"ImageTypeToString", &ImageTypeToString},
 	{"ImplodeImage", &ImplodeImage},
 	{"ImportImageChannel", &ImportImageChannel},
 	{"ImportImageChannelsMasked", &ImportImageChannelsMasked},
 	{"ImportImageCommand", &ImportImageCommand},
 	{"ImportImagePixelArea", &ImportImagePixelArea},
-	// {"ImportPixelAreaOptionsInit", &ImportPixelAreaOptionsInit},
+	{"ImportPixelAreaOptionsInit", &ImportPixelAreaOptionsInit},
 	{"ImportViewPixelArea", &ImportViewPixelArea},
 	{"InitializeDifferenceImageOptions", &InitializeDifferenceImageOptions},
 	{"InitializeDifferenceStatistics", &InitializeDifferenceStatistics},
-	// {"InitializeMagicInfo", &InitializeMagicInfo},
+	{"InitializeMagicInfo", &InitializeMagicInfo},
 	{"InitializeMagick", &InitializeMagick},
-	// {"InitializeMagickClientPathAndName", &InitializeMagickClientPathAndName},
-	// {"InitializeMagickModules", &InitializeMagickModules},
-	// {"InitializeMagickRandomKernel", &InitializeMagickRandomKernel},
-	// {"InitializeMagickResources", &InitializeMagickResources},
-	// {"InitializeMagickSignalHandlers", &InitializeMagickSignalHandlers},
+	{"InitializeMagickClientPathAndName", &InitializeMagickClientPathAndName},
+	{"InitializeMagickModules", &InitializeMagickModules},
+	{"InitializeMagickRandomKernel", &InitializeMagickRandomKernel},
+	{"InitializeMagickResources", &InitializeMagickResources},
+	{"InitializeMagickSignalHandlers", &InitializeMagickSignalHandlers},
 	{"InitializePixelIteratorOptions", &InitializePixelIteratorOptions},
-	// {"InitializeSemaphore", &InitializeSemaphore},
+	{"InitializeSemaphore", &InitializeSemaphore},
 	{"InsertImageInList", &InsertImageInList},
-	// {"InterlaceTypeToString", &InterlaceTypeToString},
-	// {"InterpolateColor", &InterpolateColor},
-	// {"InterpolateViewColor", &InterpolateViewColor},
-	// {"InvokeDelegate", &InvokeDelegate},
-	// {"InvokePostscriptDelegate", &InvokePostscriptDelegate},
-	// {"IsAccessible", &IsAccessible},
-	// {"IsAccessibleAndNotEmpty", &IsAccessibleAndNotEmpty},
-	// {"IsAccessibleNoLogging", &IsAccessibleNoLogging},
-	// {"IsEventLogging", &IsEventLogging},
-	// {"IsGeometry", &IsGeometry},
-	// {"IsGlob", &IsGlob},
-	// {"IsGrayImage", &IsGrayImage},
+	{"InterlaceTypeToString", &InterlaceTypeToString},
+	{"InterpolateColor", &InterpolateColor},
+	{"InterpolateViewColor", &InterpolateViewColor},
+	{"InvokeDelegate", &InvokeDelegate},
+	{"InvokePostscriptDelegate", &InvokePostscriptDelegate},
+	{"IsAccessible", &IsAccessible},
+	{"IsAccessibleAndNotEmpty", &IsAccessibleAndNotEmpty},
+	{"IsAccessibleNoLogging", &IsAccessibleNoLogging},
+	{"IsEventLogging", &IsEventLogging},
+	{"IsGeometry", &IsGeometry},
+	{"IsGlob", &IsGlob},
+	{"IsGrayImage", &IsGrayImage},
 	{"IsImagesEqual", &IsImagesEqual},
 	{"IsMagickConflict", &IsMagickConflict},
-	// {"IsMonochromeImage", &IsMonochromeImage},
-	// {"IsOpaqueImage", &IsOpaqueImage},
+	{"IsMonochromeImage", &IsMonochromeImage},
+	{"IsOpaqueImage", &IsOpaqueImage},
 	{"IsPaletteImage", &IsPaletteImage},
-	// {"IsSubimage", &IsSubimage},
+	{"IsSubimage", &IsSubimage},
 	{"IsTaintImage", &IsTaintImage},
-	// {"IsWindows95", &IsWindows95},
-	// {"IsWriteable", &IsWriteable},
-	// {"LZWEncode2Image", &LZWEncode2Image},
-	// {"LZWEncodeImage", &LZWEncodeImage},
+	{"IsWindows95", &IsWindows95},
+	{"IsWriteable", &IsWriteable},
+	{"LZWEncode2Image", &LZWEncode2Image},
+	{"LZWEncodeImage", &LZWEncodeImage},
 	{"LevelImage", &LevelImage},
 	{"LevelImageChannel", &LevelImageChannel},
 	{"LiberateMagickResource", &LiberateMagickResource},
-	// {"LiberateMemory", &LiberateMemory},
-	// {"LiberateSemaphoreInfo", &LiberateSemaphoreInfo},
-	// {"LiberateTemporaryFile", &LiberateTemporaryFile},
-	// {"ListColorInfo", &ListColorInfo},
-	// {"ListDelegateInfo", &ListDelegateInfo},
-	// {"ListFiles", &ListFiles},
-	// {"ListMagicInfo", &ListMagicInfo},
+	{"LiberateMemory", &LiberateMemory},
+	{"LiberateSemaphoreInfo", &LiberateSemaphoreInfo},
+	{"LiberateTemporaryFile", &LiberateTemporaryFile},
+	{"ListColorInfo", &ListColorInfo},
+	{"ListDelegateInfo", &ListDelegateInfo},
+	{"ListFiles", &ListFiles},
+	{"ListMagicInfo", &ListMagicInfo},
 	{"ListMagickInfo", &ListMagickInfo},
 	{"ListMagickResourceInfo", &ListMagickResourceInfo},
-	// {"ListModuleInfo", &ListModuleInfo},
+	{"ListModuleInfo", &ListModuleInfo},
 	{"ListModuleMap", &ListModuleMap},
-	// {"ListTypeInfo", &ListTypeInfo},
-	// {"LocaleCompare", &LocaleCompare},
-	// {"LocaleLower", &LocaleLower},
-	// {"LocaleNCompare", &LocaleNCompare},
-	// {"LocaleUpper", &LocaleUpper},
-	// {"LockSemaphoreInfo", &LockSemaphoreInfo},
-	// {"LogMagickEvent", &LogMagickEvent},
-	// {"LogMagickEventList", &LogMagickEventList},
-	// {"MSBOrderLong", &MSBOrderLong},
-	// {"MSBOrderShort", &MSBOrderShort},
+	{"ListTypeInfo", &ListTypeInfo},
+	{"LocaleCompare", &LocaleCompare},
+	{"LocaleLower", &LocaleLower},
+	{"LocaleNCompare", &LocaleNCompare},
+	{"LocaleUpper", &LocaleUpper},
+	{"LockSemaphoreInfo", &LockSemaphoreInfo},
+	{"LogMagickEvent", &LogMagickEvent},
+	{"LogMagickEventList", &LogMagickEventList},
+	{"MSBOrderLong", &MSBOrderLong},
+	{"MSBOrderShort", &MSBOrderShort},
 	{"MagickAllocFunctions", &MagickAllocFunctions},
-	// {"MagickArraySize", &MagickArraySize},
-	// {"MagickBitStreamInitializeRead", &MagickBitStreamInitializeRead},
-	// {"MagickBitStreamInitializeWrite", &MagickBitStreamInitializeWrite},
-	// {"MagickBitStreamMSBRead", &MagickBitStreamMSBRead},
-	// {"MagickBitStreamMSBWrite", &MagickBitStreamMSBWrite},
+	{"MagickArraySize", &MagickArraySize},
+	{"MagickBitStreamInitializeRead", &MagickBitStreamInitializeRead},
+	{"MagickBitStreamInitializeWrite", &MagickBitStreamInitializeWrite},
+	{"MagickBitStreamMSBRead", &MagickBitStreamMSBRead},
+	{"MagickBitStreamMSBWrite", &MagickBitStreamMSBWrite},
 	{"MagickCloneMemory", &MagickCloneMemory},
-	// {"MagickCommand", &MagickCommand},
-	// {"MagickCompositeImageUnderColor", &MagickCompositeImageUnderColor},
+	{"MagickCommand", &MagickCommand},
+	{"MagickCompositeImageUnderColor", &MagickCompositeImageUnderColor},
 	{"MagickConfirmAccess", &MagickConfirmAccess},
-	// {"MagickConstrainColormapIndex", &MagickConstrainColormapIndex},
-	// {"MagickCreateDirectoryPath", &MagickCreateDirectoryPath},
+	{"MagickConstrainColormapIndex", &MagickConstrainColormapIndex},
+	{"MagickCreateDirectoryPath", &MagickCreateDirectoryPath},
 	{"MagickError", &MagickError},
 	{"MagickFatalError", &MagickFatalError},
-	// {"MagickFindRawImageMinMax", &MagickFindRawImageMinMax},
+	{"MagickFindRawImageMinMax", &MagickFindRawImageMinMax},
 	{"MagickFree", &MagickFree},
 	{"MagickFreeAligned", &MagickFreeAligned},
-	// {"MagickGetBitRevTable", &MagickGetBitRevTable},
-	// {"MagickGetMMUPageSize", &MagickGetMMUPageSize},
-	// {"MagickGetQuantumSamplesPerPixel", &MagickGetQuantumSamplesPerPixel},
+	{"MagickGetBitRevTable", &MagickGetBitRevTable},
+	{"MagickGetMMUPageSize", &MagickGetMMUPageSize},
+	{"MagickGetQuantumSamplesPerPixel", &MagickGetQuantumSamplesPerPixel},
 	{"MagickMalloc", &MagickMalloc},
 	{"MagickMallocAligned", &MagickMallocAligned},
 	{"MagickMallocAlignedArray", &MagickMallocAlignedArray},
 	{"MagickMallocArray", &MagickMallocArray},
 	{"MagickMallocCleared", &MagickMallocCleared},
-	// {"MagickMapAccessEntry", &MagickMapAccessEntry},
-	// {"MagickMapAddEntry", &MagickMapAddEntry},
-	// {"MagickMapAllocateIterator", &MagickMapAllocateIterator},
-	// {"MagickMapAllocateMap", &MagickMapAllocateMap},
-	// {"MagickMapClearMap", &MagickMapClearMap},
-	// {"MagickMapCloneMap", &MagickMapCloneMap},
-	// {"MagickMapCopyBlob", &MagickMapCopyBlob},
-	// {"MagickMapCopyString", &MagickMapCopyString},
-	// {"MagickMapDeallocateBlob", &MagickMapDeallocateBlob},
-	// {"MagickMapDeallocateIterator", &MagickMapDeallocateIterator},
-	// {"MagickMapDeallocateMap", &MagickMapDeallocateMap},
-	// {"MagickMapDeallocateString", &MagickMapDeallocateString},
-	// {"MagickMapDereferenceIterator", &MagickMapDereferenceIterator},
-	// {"MagickMapIterateNext", &MagickMapIterateNext},
-	// {"MagickMapIteratePrevious", &MagickMapIteratePrevious},
-	// {"MagickMapIterateToBack", &MagickMapIterateToBack},
-	// {"MagickMapIterateToFront", &MagickMapIterateToFront},
-	// {"MagickMapRemoveEntry", &MagickMapRemoveEntry},
+	{"MagickMapAccessEntry", &MagickMapAccessEntry},
+	{"MagickMapAddEntry", &MagickMapAddEntry},
+	{"MagickMapAllocateIterator", &MagickMapAllocateIterator},
+	{"MagickMapAllocateMap", &MagickMapAllocateMap},
+	{"MagickMapClearMap", &MagickMapClearMap},
+	{"MagickMapCloneMap", &MagickMapCloneMap},
+	{"MagickMapCopyBlob", &MagickMapCopyBlob},
+	{"MagickMapCopyString", &MagickMapCopyString},
+	{"MagickMapDeallocateBlob", &MagickMapDeallocateBlob},
+	{"MagickMapDeallocateIterator", &MagickMapDeallocateIterator},
+	{"MagickMapDeallocateMap", &MagickMapDeallocateMap},
+	{"MagickMapDeallocateString", &MagickMapDeallocateString},
+	{"MagickMapDereferenceIterator", &MagickMapDereferenceIterator},
+	{"MagickMapIterateNext", &MagickMapIterateNext},
+	{"MagickMapIteratePrevious", &MagickMapIteratePrevious},
+	{"MagickMapIterateToBack", &MagickMapIterateToBack},
+	{"MagickMapIterateToFront", &MagickMapIterateToFront},
+	{"MagickMapRemoveEntry", &MagickMapRemoveEntry},
 	{"MagickMonitor", &MagickMonitor},
 	{"MagickMonitorFormatted", &MagickMonitorFormatted},
-	// {"MagickRandNewSeed", &MagickRandNewSeed},
-	// {"MagickRandReentrant", &MagickRandReentrant},
-	// {"MagickRandomInteger", &MagickRandomInteger},
-	// {"MagickRandomReal", &MagickRandomReal},
+	{"MagickRandNewSeed", &MagickRandNewSeed},
+	{"MagickRandReentrant", &MagickRandReentrant},
+	{"MagickRandomInteger", &MagickRandomInteger},
+	{"MagickRandomReal", &MagickRandomReal},
 	{"MagickRealloc", &MagickRealloc},
-	// {"MagickReverseBits", &MagickReverseBits},
-	// {"MagickSceneFileName", &MagickSceneFileName},
+	{"MagickReverseBits", &MagickReverseBits},
+	{"MagickSceneFileName", &MagickSceneFileName},
 	{"MagickSetConfirmAccessHandler", &MagickSetConfirmAccessHandler},
-	// {"MagickSizeStrToInt64", &MagickSizeStrToInt64},
-	// {"MagickSpawnVP", &MagickSpawnVP},
-	// {"MagickStrlCat", &MagickStrlCat},
-	// {"MagickStrlCpy", &MagickStrlCpy},
-	// {"MagickStrlCpyTrunc", &MagickStrlCpyTrunc},
-	// {"MagickSwabArrayOfDouble", &MagickSwabArrayOfDouble},
-	// {"MagickSwabArrayOfFloat", &MagickSwabArrayOfFloat},
-	// {"MagickSwabArrayOfUInt16", &MagickSwabArrayOfUInt16},
-	// {"MagickSwabArrayOfUInt32", &MagickSwabArrayOfUInt32},
-	// {"MagickSwabDouble", &MagickSwabDouble},
-	// {"MagickSwabFloat", &MagickSwabFloat},
-	// {"MagickSwabUInt16", &MagickSwabUInt16},
-	// {"MagickSwabUInt32", &MagickSwabUInt32},
+	{"MagickSizeStrToInt64", &MagickSizeStrToInt64},
+	{"MagickSpawnVP", &MagickSpawnVP},
+	{"MagickStrlCat", &MagickStrlCat},
+	{"MagickStrlCpy", &MagickStrlCpy},
+	{"MagickStrlCpyTrunc", &MagickStrlCpyTrunc},
+	{"MagickSwabArrayOfDouble", &MagickSwabArrayOfDouble},
+	{"MagickSwabArrayOfFloat", &MagickSwabArrayOfFloat},
+	{"MagickSwabArrayOfUInt16", &MagickSwabArrayOfUInt16},
+	{"MagickSwabArrayOfUInt32", &MagickSwabArrayOfUInt32},
+	{"MagickSwabDouble", &MagickSwabDouble},
+	{"MagickSwabFloat", &MagickSwabFloat},
+	{"MagickSwabUInt16", &MagickSwabUInt16},
+	{"MagickSwabUInt32", &MagickSwabUInt32},
 	{"MagickToMime", &MagickToMime},
-	// {"MagickTsdGetSpecific", &MagickTsdGetSpecific},
-	// {"MagickTsdKeyCreate", &MagickTsdKeyCreate},
-	// {"MagickTsdKeyCreate2", &MagickTsdKeyCreate2},
-	// {"MagickTsdKeyDelete", &MagickTsdKeyDelete},
-	// {"MagickTsdSetSpecific", &MagickTsdSetSpecific},
+	{"MagickTsdGetSpecific", &MagickTsdGetSpecific},
+	{"MagickTsdKeyCreate", &MagickTsdKeyCreate},
+	{"MagickTsdKeyCreate2", &MagickTsdKeyCreate2},
+	{"MagickTsdKeyDelete", &MagickTsdKeyDelete},
+	{"MagickTsdSetSpecific", &MagickTsdSetSpecific},
 	{"MagickWarning", &MagickWarning},
-	// {"MagickWordStreamInitializeRead", &MagickWordStreamInitializeRead},
-	// {"MagickWordStreamInitializeWrite", &MagickWordStreamInitializeWrite},
-	// {"MagickWordStreamLSBRead", &MagickWordStreamLSBRead},
-	// {"MagickWordStreamLSBWrite", &MagickWordStreamLSBWrite},
-	// {"MagickWordStreamLSBWriteFlush", &MagickWordStreamLSBWriteFlush},
+	{"MagickWordStreamInitializeRead", &MagickWordStreamInitializeRead},
+	{"MagickWordStreamInitializeWrite", &MagickWordStreamInitializeWrite},
+	{"MagickWordStreamLSBRead", &MagickWordStreamLSBRead},
+	{"MagickWordStreamLSBWrite", &MagickWordStreamLSBWrite},
+	{"MagickWordStreamLSBWriteFlush", &MagickWordStreamLSBWriteFlush},
 	{"MagnifyImage", &MagnifyImage},
-	// {"MapBlob", &MapBlob},
+	{"MapBlob", &MapBlob},
 	{"MapImage", &MapImage},
 	{"MapImages", &MapImages},
-	// {"MapModeToString", &MapModeToString},
+	{"MapModeToString", &MapModeToString},
 	{"MatteFloodfillImage", &MatteFloodfillImage},
 	{"MedianFilterImage", &MedianFilterImage},
-	// {"MetricTypeToString", &MetricTypeToString},
+	{"MetricTypeToString", &MetricTypeToString},
 	{"MinifyImage", &MinifyImage},
 	{"ModifyImage", &ModifyImage},
-	// {"Modulate", &Modulate},
+	{"Modulate", &Modulate},
 	{"ModulateImage", &ModulateImage},
-	// {"MogrifyImage", &MogrifyImage},
-	// {"MogrifyImageCommand", &MogrifyImageCommand},
-	// {"MogrifyImages", &MogrifyImages},
-	// {"MontageImageCommand", &MontageImageCommand},
+	{"MogrifyImage", &MogrifyImage},
+	{"MogrifyImageCommand", &MogrifyImageCommand},
+	{"MogrifyImages", &MogrifyImages},
+	{"MontageImageCommand", &MontageImageCommand},
 	{"MontageImages", &MontageImages},
 	{"MorphImages", &MorphImages},
 	{"MosaicImages", &MosaicImages},
 	{"MotionBlurImage", &MotionBlurImage},
-	// {"MultilineCensus", &MultilineCensus},
-	// {"NTElapsedTime", &NTElapsedTime},
-	// {"NTErrorHandler", &NTErrorHandler},
-	// {"NTGetExecutionPath", &NTGetExecutionPath},
-	// {"NTGetLastError", &NTGetLastError},
-	// {"NTGetTypeList", &NTGetTypeList},
-	// {"NTGhostscriptDLL", &NTGhostscriptDLL},
-	// {"NTGhostscriptDLLVectors", &NTGhostscriptDLLVectors},
-	// {"NTGhostscriptEXE", &NTGhostscriptEXE},
-	// {"NTGhostscriptFonts", &NTGhostscriptFonts},
-	// {"NTGhostscriptLoadDLL", &NTGhostscriptLoadDLL},
-	// {"NTGhostscriptUnLoadDLL", &NTGhostscriptUnLoadDLL},
-	// {"NTIsMagickConflict", &NTIsMagickConflict},
-	// {"NTKernelAPISupported", &NTKernelAPISupported},
-	// {"NTRegistryKeyLookup", &NTRegistryKeyLookup},
-	// {"NTResourceToBlob", &NTResourceToBlob},
-	// {"NTSystemComman", &NTSystemComman},
-	// {"NTUserTime", &NTUserTime},
-	// {"NTWarningHandler", &NTWarningHandler},
-	// {"NTclosedir", &NTclosedir},
-	// {"NTdlclose", &NTdlclose},
-	// {"NTdlerror", &NTdlerror},
-	// {"NTdlexit", &NTdlexit},
-	// {"NTdlinit", &NTdlinit},
-	// {"NTdlopen", &NTdlopen},
-	// {"NTdlsetsearchpath", &NTdlsetsearchpath},
-	// {"NTdlsym", &NTdlsym},
-	// {"NTftruncate", &NTftruncate},
-	// {"NTmmap", &NTmmap},
-	// {"NTmsync", &NTmsync},
-	// {"NTmunmap", &NTmunmap},
-	// {"NTopendir", &NTopendir},
-	// {"NTreaddir", &NTreaddir},
-	// {"NTseekdir", &NTseekdir},
-	// {"NTtelldir", &NTtelldir},
+	{"MultilineCensus", &MultilineCensus},
+	{"NTElapsedTime", &NTElapsedTime},
+	{"NTErrorHandler", &NTErrorHandler},
+	{"NTGetExecutionPath", &NTGetExecutionPath},
+	{"NTGetLastError", &NTGetLastError},
+	{"NTGetTypeList", &NTGetTypeList},
+	{"NTGhostscriptDLL", &NTGhostscriptDLL},
+	{"NTGhostscriptDLLVectors", &NTGhostscriptDLLVectors},
+	{"NTGhostscriptEXE", &NTGhostscriptEXE},
+	{"NTGhostscriptFonts", &NTGhostscriptFonts},
+	{"NTGhostscriptLoadDLL", &NTGhostscriptLoadDLL},
+	{"NTGhostscriptUnLoadDLL", &NTGhostscriptUnLoadDLL},
+	{"NTIsMagickConflict", &NTIsMagickConflict},
+	{"NTKernelAPISupported", &NTKernelAPISupported},
+	{"NTRegistryKeyLookup", &NTRegistryKeyLookup},
+	{"NTResourceToBlob", &NTResourceToBlob},
+	{"NTSystemComman", &NTSystemCommand},
+	{"NTUserTime", &NTUserTime},
+	{"NTWarningHandler", &NTWarningHandler},
+	{"NTclosedir", &NTclosedir},
+	{"NTdlclose", &NTdlclose},
+	{"NTdlerror", &NTdlerror},
+	{"NTdlexit", &NTdlexit},
+	{"NTdlinit", &NTdlinit},
+	{"NTdlopen", &NTdlopen},
+	{"NTdlsetsearchpath", &NTdlsetsearchpath},
+	{"NTdlsym", &NTdlsym},
+	{"NTftruncate", &NTftruncate},
+	{"NTmmap", &NTmmap},
+	{"NTmsync", &NTmsync},
+	{"NTmunmap", &NTmunmap},
+	{"NTopendir", &NTopendir},
+	{"NTreaddir", &NTreaddir},
+	{"NTseekdir", &NTseekdir},
+	{"NTtelldir", &NTtelldir},
 	{"NegateImage", &NegateImage},
 	{"NewImageList", &NewImageList},
-	// {"NextImageProfile", &NextImageProfile},
-	// {"NoiseTypeToString", &NoiseTypeToString},
+	{"NextImageProfile", &NextImageProfile},
+	{"NoiseTypeToString", &NoiseTypeToString},
 	{"NormalizeImage", &NormalizeImage},
 	{"OilPaintImage", &OilPaintImage},
 	{"OpaqueImage", &OpaqueImage},
-	// {"OpenBlob", &OpenBlob},
+	{"OpenBlob", &OpenBlob},
 	{"OpenCacheView", &OpenCacheView},
-	// {"OpenModule", &OpenModule},
-	// {"OpenModules", &OpenModules},
+	{"OpenModule", &OpenModule},
+	{"OpenModules", &OpenModules},
 	{"OrderedDitherImage", &OrderedDitherImage},
-	// {"OrientationTypeToString", &OrientationTypeToString},
-	// {"PackbitsEncode2Image", &PackbitsEncode2Image},
-	// {"PackbitsEncodeImage", &PackbitsEncodeImage},
-	// {"PersistCache", &PersistCache},
+	{"OrientationTypeToString", &OrientationTypeToString},
+	{"PackbitsEncode2Image", &PackbitsEncode2Image},
+	{"PackbitsEncodeImage", &PackbitsEncodeImage},
+	{"PersistCache", &PersistCache},
 	{"PingBlob", &PingBlob},
 	{"PingImage", &PingImage},
 	{"PixelIterateDualModify", &PixelIterateDualModify},
@@ -724,80 +726,80 @@ var allApis = Apis{
 	{"PixelIterateTripleModify", &PixelIterateTripleModify},
 	{"PixelIterateTripleNew", &PixelIterateTripleNew},
 	{"PlasmaImage", &PlasmaImage},
-	// {"PopImagePixels", &PopImagePixels},
+	{"PopImagePixels", &PopImagePixels},
 	{"PrependImageToList", &PrependImageToList},
 	{"ProfileImage", &ProfileImage},
-	// {"PurgeTemporaryFiles", &PurgeTemporaryFiles},
-	// {"PushImagePixels", &PushImagePixels},
+	{"PurgeTemporaryFiles", &PurgeTemporaryFiles},
+	{"PushImagePixels", &PushImagePixels},
 	{"QuantizeImage", &QuantizeImage},
 	{"QuantizeImages", &QuantizeImages},
 	{"QuantumOperatorImage", &QuantumOperatorImage},
-	// {"QuantumOperatorImageMultivalue", &QuantumOperatorImageMultivalue},
+	{"QuantumOperatorImageMultivalue", &QuantumOperatorImageMultivalue},
 	{"QuantumOperatorRegionImage", &QuantumOperatorRegionImage},
-	// {"QuantumOperatorToString", &QuantumOperatorToString},
-	// {"QuantumSampleTypeToString", &QuantumSampleTypeToString},
-	// {"QuantumTypeToString", &QuantumTypeToString},
-	// {"QueryColorDatabase", &QueryColorDatabase},
-	// {"QueryColorname", &QueryColorname},
-	// {"RGBTransformImage", &RGBTransformImage},
+	{"QuantumOperatorToString", &QuantumOperatorToString},
+	{"QuantumSampleTypeToString", &QuantumSampleTypeToString},
+	{"QuantumTypeToString", &QuantumTypeToString},
+	{"QueryColorDatabase", &QueryColorDatabase},
+	{"QueryColorname", &QueryColorname},
+	{"RGBTransformImage", &RGBTransformImage},
 	{"RaiseImage", &RaiseImage},
 	{"RandomChannelThresholdImage", &RandomChannelThresholdImage},
-	// {"ReacquireMemory", &ReacquireMemory},
-	// {"ReadBlob", &ReadBlob},
-	// {"ReadBlobByte", &ReadBlobByte},
-	// {"ReadBlobLSBDouble", &ReadBlobLSBDouble},
-	// {"ReadBlobLSBDoubles", &ReadBlobLSBDoubles},
-	// {"ReadBlobLSBFloat", &ReadBlobLSBFloat},
-	// {"ReadBlobLSBFloats", &ReadBlobLSBFloats},
-	// {"ReadBlobLSBLong", &ReadBlobLSBLong},
-	// {"ReadBlobLSBLongs", &ReadBlobLSBLongs},
-	// {"ReadBlobLSBShort", &ReadBlobLSBShort},
-	// {"ReadBlobLSBShorts", &ReadBlobLSBShorts},
-	// {"ReadBlobMSBDouble", &ReadBlobMSBDouble},
-	// {"ReadBlobMSBDoubles", &ReadBlobMSBDoubles},
-	// {"ReadBlobMSBFloat", &ReadBlobMSBFloat},
-	// {"ReadBlobMSBFloats", &ReadBlobMSBFloats},
-	// {"ReadBlobMSBLong", &ReadBlobMSBLong},
-	// {"ReadBlobMSBLongs", &ReadBlobMSBLongs},
-	// {"ReadBlobMSBShort", &ReadBlobMSBShort},
-	// {"ReadBlobMSBShorts", &ReadBlobMSBShorts},
-	// {"ReadBlobString", &ReadBlobString},
-	// {"ReadBlobZC", &ReadBlobZC},
+	{"ReacquireMemory", &ReacquireMemory},
+	{"ReadBlob", &ReadBlob},
+	{"ReadBlobByte", &ReadBlobByte},
+	{"ReadBlobLSBDouble", &ReadBlobLSBDouble},
+	{"ReadBlobLSBDoubles", &ReadBlobLSBDoubles},
+	{"ReadBlobLSBFloat", &ReadBlobLSBFloat},
+	{"ReadBlobLSBFloats", &ReadBlobLSBFloats},
+	{"ReadBlobLSBLong", &ReadBlobLSBLong},
+	{"ReadBlobLSBLongs", &ReadBlobLSBLongs},
+	{"ReadBlobLSBShort", &ReadBlobLSBShort},
+	{"ReadBlobLSBShorts", &ReadBlobLSBShorts},
+	{"ReadBlobMSBDouble", &ReadBlobMSBDouble},
+	{"ReadBlobMSBDoubles", &ReadBlobMSBDoubles},
+	{"ReadBlobMSBFloat", &ReadBlobMSBFloat},
+	{"ReadBlobMSBFloats", &ReadBlobMSBFloats},
+	{"ReadBlobMSBLong", &ReadBlobMSBLong},
+	{"ReadBlobMSBLongs", &ReadBlobMSBLongs},
+	{"ReadBlobMSBShort", &ReadBlobMSBShort},
+	{"ReadBlobMSBShorts", &ReadBlobMSBShorts},
+	{"ReadBlobString", &ReadBlobString},
+	{"ReadBlobZC", &ReadBlobZC},
 	{"ReadImage", &ReadImage},
 	{"ReadInlineImage", &ReadInlineImage},
 	{"ReduceNoiseImage", &ReduceNoiseImage},
 	{"ReferenceBlob", &ReferenceBlob},
 	{"ReferenceImage", &ReferenceImage},
 	{"RegisterMagickInfo", &RegisterMagickInfo},
-	// {"RegisterStaticModules", &RegisterStaticModules},
+	{"RegisterStaticModules", &RegisterStaticModules},
 	{"RemoveDefinitions", &RemoveDefinitions},
 	{"RemoveFirstImageFromList", &RemoveFirstImageFromList},
 	{"RemoveLastImageFromList", &RemoveLastImageFromList},
 	{"ReplaceImageColormap", &ReplaceImageColormap},
 	{"ReplaceImageInList", &ReplaceImageInList},
 	{"ResetImagePage", &ResetImagePage},
-	// {"ResetTimer", &ResetTimer},
-	// {"ResizeFilterToString", &ResizeFilterToString},
+	{"ResetTimer", &ResetTimer},
+	{"ResizeFilterToString", &ResizeFilterToString},
 	{"ResizeImage", &ResizeImage},
 	{"ReverseImageList", &ReverseImageList},
 	{"RollImage", &RollImage},
 	{"RotateImage", &RotateImage},
 	{"SampleImage", &SampleImage},
 	{"ScaleImage", &ScaleImage},
-	// {"SeekBlob", &SeekBlob},
+	{"SeekBlob", &SeekBlob},
 	{"SegmentImage", &SegmentImage},
 	{"SetBlobClosable", &SetBlobClosable},
 	{"SetBlobTemporary", &SetBlobTemporary},
-	// {"SetCacheView", &SetCacheView},
+	{"SetCacheView", &SetCacheView},
 	{"SetCacheViewPixels", &SetCacheViewPixels},
-	// {"SetClientFilename", &SetClientFilename},
-	// {"SetClientName", &SetClientName},
-	// {"SetClientPath", &SetClientPath},
-	// {"SetDelegateInfo", &SetDelegateInfo},
+	{"SetClientFilename", &SetClientFilename},
+	{"SetClientName", &SetClientName},
+	{"SetClientPath", &SetClientPath},
+	{"SetDelegateInfo", &SetDelegateInfo},
 	{"SetErrorHandler", &SetErrorHandler},
 	{"SetExceptionInfo", &SetExceptionInfo},
 	{"SetFatalErrorHandler", &SetFatalErrorHandler},
-	// {"SetGeometry", &SetGeometry},
+	{"SetGeometry", &SetGeometry},
 	{"SetImage", &SetImage},
 	{"SetImageAttribute", &SetImageAttribute},
 	{"SetImageChannelDepth", &SetImageChannelDepth},
@@ -805,15 +807,15 @@ var allApis = Apis{
 	{"SetImageColor", &SetImageColor},
 	{"SetImageColorRegion", &SetImageColorRegion},
 	{"SetImageDepth", &SetImageDepth},
-	// {"SetImageInfo", &SetImageInfo},
+	{"SetImageInfo", &SetImageInfo},
 	{"SetImageOpacity", &SetImageOpacity},
 	{"SetImagePixels", &SetImagePixels},
 	{"SetImagePixelsEx", &SetImagePixelsEx},
 	{"SetImageProfile", &SetImageProfile},
 	{"SetImageType", &SetImageType},
 	{"SetImageVirtualPixelMethod", &SetImageVirtualPixelMethod},
-	// {"SetLogEventMask", &SetLogEventMask},
-	// {"SetLogFormat", &SetLogFormat},
+	{"SetLogEventMask", &SetLogEventMask},
+	{"SetLogFormat", &SetLogFormat},
 	{"SetMagickInfo", &SetMagickInfo},
 	{"SetMagickRegistry", &SetMagickRegistry},
 	{"SetMagickResourceLimit", &SetMagickResourceLimit},
@@ -826,88 +828,88 @@ var allApis = Apis{
 	{"ShearImage", &ShearImage},
 	{"SignatureImage", &SignatureImage},
 	{"SolarizeImage", &SolarizeImage},
-	// {"SortColormapByIntensity", &SortColormapByIntensity},
+	{"SortColormapByIntensity", &SortColormapByIntensity},
 	{"SpliceImageIntoList", &SpliceImageIntoList},
 	{"SplitImageList", &SplitImageList},
 	{"SpreadImage", &SpreadImage},
 	{"SteganoImage", &SteganoImage},
 	{"StereoImage", &StereoImage},
-	// {"StorageTypeToString", &StorageTypeToString},
-	// {"StretchTypeToString", &StretchTypeToString},
-	// {"StringToArgv", &StringToArgv},
-	// {"StringToChannelType", &StringToChannelType},
-	// {"StringToColorspaceType", &StringToColorspaceType},
-	// {"StringToCompositeOperator", &StringToCompositeOperator},
-	// {"StringToCompressionType", &StringToCompressionType},
-	// {"StringToDouble", &StringToDouble},
-	// {"StringToEndianType", &StringToEndianType},
-	// {"StringToFilterTypes", &StringToFilterTypes},
-	// {"StringToGravityType", &StringToGravityType},
-	// {"StringToHighlightStyle", &StringToHighlightStyle},
-	// {"StringToImageType", &StringToImageType},
-	// {"StringToInterlaceType", &StringToInterlaceType},
-	// {"StringToList", &StringToList},
-	// {"StringToMetricType", &StringToMetricType},
-	// {"StringToNoiseType", &StringToNoiseType},
-	// {"StringToOrientationType", &StringToOrientationType},
-	// {"StringToPreviewType", &StringToPreviewType},
-	// {"StringToQuantumOperator", &StringToQuantumOperator},
-	// {"StringToResourceType", &StringToResourceType},
-	// {"StringToVirtualPixelMethod", &StringToVirtualPixelMethod},
-	// {"Strip", &Strip},
+	{"StorageTypeToString", &StorageTypeToString},
+	{"StretchTypeToString", &StretchTypeToString},
+	{"StringToArgv", &StringToArgv},
+	{"StringToChannelType", &StringToChannelType},
+	{"StringToColorspaceType", &StringToColorspaceType},
+	{"StringToCompositeOperator", &StringToCompositeOperator},
+	{"StringToCompressionType", &StringToCompressionType},
+	{"StringToDouble", &StringToDouble},
+	{"StringToEndianType", &StringToEndianType},
+	{"StringToFilterTypes", &StringToFilterTypes},
+	{"StringToGravityType", &StringToGravityType},
+	{"StringToHighlightStyle", &StringToHighlightStyle},
+	{"StringToImageType", &StringToImageType},
+	{"StringToInterlaceType", &StringToInterlaceType},
+	{"StringToList", &StringToList},
+	{"StringToMetricType", &StringToMetricType},
+	{"StringToNoiseType", &StringToNoiseType},
+	{"StringToOrientationType", &StringToOrientationType},
+	{"StringToPreviewType", &StringToPreviewType},
+	{"StringToQuantumOperator", &StringToQuantumOperator},
+	{"StringToResourceType", &StringToResourceType},
+	{"StringToVirtualPixelMethod", &StringToVirtualPixelMethod},
+	{"Strip", &Strip},
 	{"StripImage", &StripImage},
-	// {"StyleTypeToString", &StyleTypeToString},
-	// {"SubstituteString", &SubstituteString},
+	{"StyleTypeToString", &StyleTypeToString},
+	{"SubstituteString", &SubstituteString},
 	{"SwirlImage", &SwirlImage},
-	// {"SyncCacheView", &SyncCacheView},
+	{"SyncCacheView", &SyncCacheView},
 	{"SyncCacheViewPixels", &SyncCacheViewPixels},
-	// {"SyncImage", &SyncImage},
+	{"SyncImage", &SyncImage},
 	{"SyncImagePixels", &SyncImagePixels},
 	{"SyncImagePixelsEx", &SyncImagePixelsEx},
-	// {"SyncNextImageInList", &SyncNextImageInList},
-	// {"SystemCommand", &SystemCommand},
-	// {"TellBlob", &TellBlob},
+	{"SyncNextImageInList", &SyncNextImageInList},
+	{"SystemCommand", &SystemCommand},
+	{"TellBlob", &TellBlob},
 	{"TextureImage", &TextureImage},
 	{"ThresholdImage", &ThresholdImage},
 	{"ThrowException", &ThrowException},
 	{"ThrowLoggedException", &ThrowLoggedException},
 	{"ThumbnailImage", &ThumbnailImage},
-	// {"TimeImageCommand", &TimeImageCommand},
-	// {"Tokenizer", &Tokenizer},
-	// {"TransformColorspace", &TransformColorspace},
-	// {"TransformHSL", &TransformHSL},
-	// {"TransformHWB", &TransformHWB},
+	{"TimeImageCommand", &TimeImageCommand},
+	{"Tokenizer", &Tokenizer},
+	{"TransformColorspace", &TransformColorspace},
+	{"TransformHSL", &TransformHSL},
+	{"TransformHWB", &TransformHWB},
 	{"TransformImage", &TransformImage},
-	// {"TransformRGBImage", &TransformRGBImage},
+	{"TransformRGBImage", &TransformRGBImage},
 	{"TransformSignature", &TransformSignature},
-	// {"TranslateText", &TranslateText},
-	// {"TranslateTextEx", &TranslateTextEx},
+	{"TranslateText", &TranslateText},
+	{"TranslateTextEx", &TranslateTextEx},
 	{"TransparentImage", &TransparentImage},
-	// {"UnlockSemaphoreInfo", &UnlockSemaphoreInfo},
-	// {"UnmapBlob", &UnmapBlob},
+	{"UnlockSemaphoreInfo", &UnlockSemaphoreInfo},
+	{"UnmapBlob", &UnmapBlob},
 	{"UnregisterMagickInfo", &UnregisterMagickInfo},
-	// {"UnregisterStaticModules", &UnregisterStaticModules},
+	{"UnregisterStaticModules", &UnregisterStaticModules},
 	{"UnsharpMaskImage", &UnsharpMaskImage},
 	{"UnsharpMaskImageChannel", &UnsharpMaskImageChannel},
 	{"UpdateSignature", &UpdateSignature},
 	{"WaveImage", &WaveImage},
 	{"WhiteThresholdImage", &WhiteThresholdImage},
-	// {"WriteBlob", &WriteBlob},
-	// {"WriteBlobByte", &WriteBlobByte},
-	// {"WriteBlobFile", &WriteBlobFile},
-	// {"WriteBlobLSBLong", &WriteBlobLSBLong},
-	// {"WriteBlobLSBShort", &WriteBlobLSBShort},
-	// {"WriteBlobMSBLong", &WriteBlobMSBLong},
-	// {"WriteBlobMSBShort", &WriteBlobMSBShort},
-	// {"WriteBlobString", &WriteBlobString},
+	{"WriteBlob", &WriteBlob},
+	{"WriteBlobByte", &WriteBlobByte},
+	{"WriteBlobFile", &WriteBlobFile},
+	{"WriteBlobLSBLong", &WriteBlobLSBLong},
+	{"WriteBlobLSBShort", &WriteBlobLSBShort},
+	{"WriteBlobMSBLong", &WriteBlobMSBLong},
+	{"WriteBlobMSBShort", &WriteBlobMSBShort},
+	{"WriteBlobString", &WriteBlobString},
 	{"WriteImage", &WriteImage},
 	{"WriteImages", &WriteImages},
 	{"WriteImagesFile", &WriteImagesFile},
-	// {"ZoomImage", &ZoomImage},
-	// {"_Gm_convert_fp16_to_fp32", &Gm_convert_fp16_to_fp32},
-	// {"_Gm_convert_fp24_to_fp32", &Gm_convert_fp24_to_fp32},
-	// {"_Gm_convert_fp32_to_fp16", &Gm_convert_fp32_to_fp16},
-	// {"_Gm_convert_fp32_to_fp24", &Gm_convert_fp32_to_fp24},
+	{"ZoomImage", &ZoomImage},
+	{"_Gm_convert_fp16_to_fp32", &GmConvertFp16toFp32},
+	{"_Gm_convert_fp24_to_fp32", &GmConvertFp24toFp32},
+	{"_Gm_convert_fp32_to_fp16", &GmConvertFp32toFp16},
+	{"_Gm_convert_fp32_to_fp24", &GmConvertFp32toFp24},
 	{"_MagickError", &MagickError2},
 	{"_MagickFatalError", &MagickFatalError2},
 	{"_MagickWarning", &MagickWarning2},
@@ -2025,6 +2027,53 @@ type ImageChannelStatistics struct {
 	Variance float64
 }
 
+type PathOperation Enum
+
+const (
+	PathDefaultOperation PathOperation = iota
+	PathCloseOperation
+	PathCurveToOperation
+	PathCurveToQuadraticBezierOperation
+	PathCurveToQuadraticBezierSmoothOperation
+	PathCurveToSmoothOperation
+	PathEllipticArcOperation
+	PathLineToHorizontalOperation
+	PathLineToOperation
+	PathLineToVerticalOperation
+	PathMoveToOperation
+)
+
+type PathMode Enum
+
+const (
+	DefaultPathMode PathMode = iota
+	AbsolutePathMode
+	RelativePathMode
+)
+
+type PaintMethod Enum
+
+const (
+	PointMethod PaintMethod = iota
+	ReplaceMethod
+	FloodfillMethod
+	FillToBorderMethod
+	ResetMethod
+)
+
+type NoiseType Enum
+
+const (
+	UniformNoise NoiseType = iota
+	GaussianNoise
+	MultiplicativeGaussianNoise
+	ImpulseNoise
+	LaplacianNoise
+	PoissonNoise
+	RandomNoise
+	UndefinedNoise
+)
+
 // Annotate
 
 var AnnotateImage func(i *Image, drawInfo *DrawInfo) bool
@@ -2133,7 +2182,7 @@ func (i *Image) BlobStreamData() *byte { return GetBlobStreamData(i) }
 
 var GetBlobTemporary func(i *Image) bool
 
-func (i *Image) GetBlobTemporary() bool { return GetBlobTemporary(i) }
+func (i *Image) BlobTemporary() bool { return GetBlobTemporary(i) }
 
 var GetConfigureBlob func(filename, path string, length *Size, exception *ExceptionInfo) *Void
 
@@ -3439,10 +3488,10 @@ func (i *Image) QuantumOperator(channel ChannelType, quantumOperator QuantumOper
 	return QuantumOperatorImage(i, channel, quantumOperator, rvalue, exception)
 }
 
-var QuantumOperatorRegionImage func(i *Image, x, y SSize, columns, rows Size, channel ChannelType, quantum_operator QuantumOperator, rvalue float64, exception *ExceptionInfo) bool
+var QuantumOperatorRegionImage func(i *Image, x, y SSize, columns, rows Size, channel ChannelType, quantumOperator QuantumOperator, rvalue float64, exception *ExceptionInfo) bool
 
-func (i *Image) QuantumOperatorRegion(x, y SSize, columns, rows Size, channel ChannelType, quantum_operator QuantumOperator, rvalue float64, exception *ExceptionInfo) bool {
-	return QuantumOperatorRegionImage(i, x, y, columns, rows, channel, quantum_operator, rvalue, exception)
+func (i *Image) QuantumOperatorRegion(x, y SSize, columns, rows Size, channel ChannelType, quantumOperator QuantumOperator, rvalue float64, exception *ExceptionInfo) bool {
+	return QuantumOperatorRegionImage(i, x, y, columns, rows, channel, quantumOperator, rvalue, exception)
 }
 
 // Paint
@@ -3914,6 +3963,18 @@ var TransformImage func(image **Image, cropGeometry, imageGeometry string) bool
 
 //============== Undocumented ==========================
 
+type (
+	fp16bits [2]byte
+	fp24bits [3]byte
+
+	MagickMapObjectClone       func(object *Void, objectSize Size) *Void
+	MagickMapObjectDeallocator func(object *Void)
+	MagickTextTranslate        func(dst, src string, size Size) Size
+	WordStreamReadFunc         func(readFuncState *Void) Size
+	WordStreamWriteFunc        func(writeFuncState *Void, value Size) Size
+	WriteByteHook              func(*Image, uint8, *Void) uint
+)
+
 type ThreadViewDataSet struct {
 	ViewData   **Void
 	Destructor MagickFreeFunc
@@ -3978,6 +4039,147 @@ type DelegateInfo struct {
 	Stealth                        MagickBooleanType
 	Signature                      Size
 	Previous, Next                 *DelegateInfo
+}
+
+type ImageCharacteristics struct {
+	Cmyk,
+	Grayscale,
+	Monochrome,
+	Opaque,
+	Palette MagickBooleanType
+}
+
+type ModuleInfo struct {
+	Path, Magick, Name *VString
+	Stealth            uint
+	Signature          Size
+	Previous, Next     *ModuleInfo
+}
+
+type PathType Enum
+
+const (
+	RootPath PathType = iota
+	HeadPath
+	TailPath
+	BasePath
+	ExtensionPath
+	MagickPath
+	SubImagePath
+	FullPath
+)
+
+type TypeInfo struct {
+	Path, Name, Description, Family            *VString
+	Style                                      StyleType
+	Stretch                                    StretchType
+	Weight                                     Size
+	Encoding, Foundry, Format, Metrics, Glyphs *VString
+	Stealth                                    uint
+	Signature                                  Size
+	Previous, Next                             *TypeInfo
+}
+
+type LogEventType Enum
+
+const (
+	ConfigureEventMask LogEventType = 1 << iota
+	AnnotateEventMask
+	RenderEventMask
+	TransformEventMask
+	LocaleEventMask
+	CoderEventMask
+	X11EventMask
+	CacheEventMask
+	BlobEventMask
+	DeprecateEventMask
+	UserEventMask
+	ResourceEventMask
+	TemporaryFileEventMask
+	_
+	OptionEventMask
+	InformationEventMask
+	WarningEventMask
+	ErrorEventMask
+	FatalErrorEventMask
+	UndefinedEventMask LogEventType = 0
+	NoEventsMask                    = UndefinedEventMask
+	AllEventsMask      LogEventType = 0x7FFFFFFF
+
+	ExceptionEventMask = WarningEventMask | ErrorEventMask | FatalErrorEventMask
+)
+
+type MagickMapIterator struct {
+	Map       MagickMap
+	Member    *MagickMapObject
+	Position  MagickMapIteratorPosition
+	Signature Size
+}
+
+type MagickMapIteratorPosition Enum
+
+const (
+	InListPosition MagickMapIteratorPosition = iota
+	FrontPosition
+	BackPosition
+)
+
+type MagickMapObject struct {
+	Key                *VString
+	Object             *Void
+	ObjectSize         Size
+	CloneFunction      MagickMapObjectClone
+	DeallocateFunction MagickMapObjectDeallocator
+	ReferenceCount     SSize
+	Previous, Next     *MagickMapObject
+	Signature          Size
+}
+
+type BitStreamReadHandle struct {
+	Bytes         *byte
+	BitsRemaining uint
+}
+
+type BitStreamWriteHandle struct {
+	Bytes         *byte
+	BitsRemaining uint
+}
+
+type WordStreamReadHandle struct {
+	Word          uint32
+	BitsRemaining uint
+	ReadFunc      WordStreamReadFunc
+	ReadFuncState *Void
+}
+
+type WordStreamWriteHandle struct {
+	Word           uint32
+	BitsRemaining  uint
+	WriteFunc      WordStreamWriteFunc
+	WriteFuncState *Void
+}
+
+type MapMode Enum
+
+const (
+	ReadMode MapMode = iota
+	WriteMode
+	IOMode
+)
+
+type GhostscriptVectors struct {
+	Exit           func(i *GSMainInstance) int
+	DeleteInstance func(i *GSMainInstance)
+	InitWithArgs   func(i *GSMainInstance, argc int, argv []string) int
+	NewInstance    func(i **GSMainInstance, callerHandle *Void) int
+	RunString      func(i *GSMainInstance, str string, userErrors int, exitCode *int) int
+}
+
+type TokenInfo struct {
+	State  int
+	Flag   uint
+	Offset SSize
+	Quote  Char
 }
 
 var AccessDefaultCacheView func(i *Image) *ViewInfo
@@ -4246,3 +4448,679 @@ func (t *TimerInfo) ElapsedTime() float64 { return GetElapsedTime(t) }
 var GetExecutionPath func(path string, extent uint32) bool
 var GetExecutionPathUsingName func(string) bool
 var GetGeometry func(geometry string, x, y *SSize, width, height *Size) MagickStatusType
+var GetImageBoundingBox func(i *Image, exception *ExceptionInfo) RectangleInfo
+
+func (i *Image) BoundingBox(exception *ExceptionInfo) RectangleInfo {
+	return GetImageBoundingBox(i, exception)
+}
+
+var GetImageCharacteristics func(i *Image, characteristics *ImageCharacteristics, optimize bool, exception *ExceptionInfo) bool
+
+func (i *Image) Characteristics(characteristics *ImageCharacteristics, optimize bool, exception *ExceptionInfo) bool {
+	return GetImageCharacteristics(i, characteristics, optimize, exception)
+}
+
+var GetImageDepth func(i *Image, exception *ExceptionInfo) SSize
+
+func (i *Image) Depth(exception *ExceptionInfo) SSize {
+	return GetImageDepth(i, exception)
+}
+
+var GetImageType func(i *Image, exception *ExceptionInfo) ImageType
+
+func (i *Image) Type(exception *ExceptionInfo) ImageType { return GetImageType(i, exception) }
+
+var GetLocaleMessage func(tag string) string
+var GetLocaleMessageFromID func(int) string
+var GetMagickCopyright func() string
+var GetImageInfoAttribute func(i *ImageInfo, image *Image, key string) *ImageAttribute
+
+func (i *ImageInfo) ImageInfoAttribute(image *Image, key string) *ImageAttribute {
+	return GetImageInfoAttribute(i, image, key)
+}
+
+var GetMagickDimension func(str string, width, height, xoff, yoff *float64) int
+var GetMagickFileFormat func(header *byte, headerLength uint32, format string, formatLength uint32, exception *ExceptionInfo) bool
+var GetMagickGeometry func(geometry string, x, y *SSize, width, height *Size) uint
+var GetMagickVersion func(version *SSize) string
+var GetMagickWebSite func() string
+var GetModuleInfo func(tag string, exception *ExceptionInfo) *ModuleInfo
+var GetOptimalKernelWidth func(radius, sigma float64) Size
+var GetOptimalKernelWidth1D func(radius, sigma float64) Size
+var GetOptimalKernelWidth2D func(radius, sigma float64) Size
+var GetPageGeometry func(pageGeometry string) string
+var GetPathComponent func(path string, type_ PathType, component string)
+var GetPixelCacheArea func(i *Image) int64
+var GetPostscriptDelegateInfo func(i *ImageInfo, antialias *uint, exception *ExceptionInfo) *DelegateInfo
+
+func (i *ImageInfo) PostscriptDelegateInfo(antialias *uint, exception *ExceptionInfo) *DelegateInfo {
+	return GetPostscriptDelegateInfo(i, antialias, exception)
+}
+
+var GetThreadViewDataSetAllocatedViews func(t *ThreadViewDataSet) uint
+
+func (t *ThreadViewDataSet) AllocatedViews() uint { return GetThreadViewDataSetAllocatedViews(t) }
+
+var GetTimerInfo func(t *TimerInfo)
+
+func (t *TimerInfo) TimerInfo() { GetTimerInfo(t) }
+
+var GetTimerResolution func() float64
+var GetToken func(string, **Char, *Char)
+var GetTypeInfo func(name string, exception *ExceptionInfo) *TypeInfo
+var GetTypeInfoByFamily func(family string, style StyleType, stretch StretchType, weight Size, exception *ExceptionInfo) *TypeInfo
+var GetTypeList func(pattern string, numberFonts *Size, exception *ExceptionInfo) []string
+var GetUserTime func(t *TimerInfo) float64
+
+func (t *TimerInfo) UserTime() float64 { return GetUserTime(t) }
+
+var GlobExpression func(expression, pattern string, caseInsensitive bool) bool
+var GradientImage func(i *Image, startColor, stopColor *PixelPacket) bool
+
+func (i *Image) Gradient(startColor, stopColor *PixelPacket) bool {
+	return GradientImage(i, startColor, stopColor)
+}
+
+var HSLTransform func(hue, saturation, lightness float64, red, green, blue *Quantum)
+var HWBTransform func(float64, float64, float64, *Quantum, *Quantum, *Quantum)
+var HighlightStyleToString func(differenceAlgorithm HighlightStyle) string
+var HuffmanDecodeImage func(i *Image) bool
+
+func (i *Image) HuffmanDecode() bool { return HuffmanDecodeImage(i) }
+
+var HuffmanEncode2Image func(i *ImageInfo, image *Image, writeByte WriteByteHook, info *Void) bool
+
+func (i *ImageInfo) HuffmanEncode2(image *Image, writeByte WriteByteHook, info *Void) bool {
+	return HuffmanEncode2Image(i, image, writeByte, info)
+}
+
+var HuffmanEncodeImage func(i *ImageInfo, image *Image) bool
+
+func (i *ImageInfo) HuffmanEncode(image *Image) bool { return HuffmanEncodeImage(i, image) }
+
+var Hull func(SSize, SSize, Size, Size, *Quantum, *Quantum, int)
+var IdentifyImageCommand func(i *ImageInfo, argc int, argv, metadata []string, exception *ExceptionInfo) uint
+
+func (i *ImageInfo) IdentifyImageCommand(argc int, argv, metadata []string, exception *ExceptionInfo) uint {
+	return IdentifyImageCommand(i, argc, argv, metadata, exception)
+}
+
+var IdentityAffine func(affine *AffineMatrix)
+var ImageToHBITMAP func(i *Image) **Void
+
+func (i *Image) HBITMAP() **Void { return ImageToHBITMAP(i) }
+
+var ImageToHuffman2DBlob func(i *Image, imageInfo *ImageInfo, length *uint32, exception *ExceptionInfo) *byte
+
+func (i *Image) Huffman2DBlob(imageInfo *ImageInfo, length *uint32, exception *ExceptionInfo) *byte {
+	return ImageToHuffman2DBlob(i, imageInfo, length, exception)
+}
+
+var ImageToJPEGBlob func(i *Image, imageInfo *ImageInfo, length *uint32, exception *ExceptionInfo) *byte
+
+func (i *Image) JPEGBlob(imageInfo *ImageInfo, length *uint32, exception *ExceptionInfo) *byte {
+	return ImageToJPEGBlob(i, imageInfo, length, exception)
+}
+
+var ImageTypeToString func(imageType ImageType) string
+var ImportPixelAreaOptionsInit func(options *ImportPixelAreaOptions)
+var InitializeMagicInfo func() bool
+var InitializeMagickClientPathAndName func(string)
+var InitializeMagickModules func()
+var InitializeMagickRandomKernel func(kernel *MagickRandomKernel)
+var InitializeMagickResources func()
+var InitializeMagickSignalHandlers func()
+var InitializeSemaphore func()
+var InterlaceTypeToString func(interlaceType InterlaceType) string
+var InterpolateColor func(i *Image, xOffset, yOffset float64, exception *ExceptionInfo) PixelPacket
+
+func (i *Image) InterpolateColor(xOffset, yOffset float64, exception *ExceptionInfo) PixelPacket {
+	return InterpolateColor(i, xOffset, yOffset, exception)
+}
+
+var InterpolateViewColor func(v *ViewInfo, color *PixelPacket, xOffset, yOffset float64, exception *ExceptionInfo)
+
+func (v *ViewInfo) InterpolateColor(color *PixelPacket, xOffset, yOffset float64, exception *ExceptionInfo) {
+	InterpolateViewColor(v, color, xOffset, yOffset, exception)
+}
+
+var InvokeDelegate func(i *ImageInfo, image *Image, decode, encode string, exception *ExceptionInfo) bool
+
+func (i *ImageInfo) InvokeDelegate(image *Image, decode, encode string, exception *ExceptionInfo) bool {
+	return InvokeDelegate(i, image, decode, encode, exception)
+}
+
+var InvokePostscriptDelegate func(verbose uint, command string, exception *ExceptionInfo) bool
+var IsAccessible func(path string) bool
+var IsAccessibleAndNotEmpty func(string) bool
+var IsAccessibleNoLogging func(string) bool
+var IsEventLogging func() bool
+var IsGeometry func(geometry string) bool
+var IsGlob func(path string) bool
+var IsGrayImage func(i *Image, exception *ExceptionInfo) bool
+
+func (i *Image) Gray(exception *ExceptionInfo) bool { return IsGrayImage(i, exception) }
+
+var IsMonochromeImage func(i *Image, exception *ExceptionInfo) bool
+
+func (i *Image) Monochrome(exception *ExceptionInfo) bool {
+	return IsMonochromeImage(i, exception)
+}
+
+var IsOpaqueImage func(i *Image, exception *ExceptionInfo) bool
+
+func (i *Image) IsOpaque(exception *ExceptionInfo) bool { return IsOpaqueImage(i, exception) }
+
+var IsSubimage func(geometry string, pedantic uint) uint
+var IsWindows95 func() bool
+var IsWriteable func(string) bool
+var LZWEncode2Image func(i *Image, length uint32, pixels *byte, writeByte WriteByteHook, info *Void) bool
+
+func (i *Image) LZWEncode2(length uint32, pixels *byte, writeByte WriteByteHook, info *Void) bool {
+	return LZWEncode2Image(i, length, pixels, writeByte, info)
+}
+
+var LZWEncodeImage func(i *Image, length uint32, pixels *byte) bool
+
+func (i *Image) LZWEncode(length uint32, pixels *byte) bool {
+	return LZWEncodeImage(i, length, pixels)
+}
+
+var LiberateMemory func(memory **Void)
+var LiberateSemaphoreInfo func(s **SemaphoreInfo)
+var LiberateTemporaryFile func(filename string) bool
+var ListColorInfo func(f *FILE, exception *ExceptionInfo) bool
+
+func (f *FILE) ColorInfo(exception *ExceptionInfo) bool { return ListColorInfo(f, exception) }
+
+var ListDelegateInfo func(f *FILE, exception *ExceptionInfo) bool
+
+func (f *FILE) DelegateInfo(exception *ExceptionInfo) bool { return ListDelegateInfo(f, exception) }
+
+var ListFiles func(directory, pattern string, numberEntries *Size) []string
+var ListMagicInfo func(f *FILE, exception *ExceptionInfo) bool
+
+func (f *FILE) MagicInfo(exception *ExceptionInfo) bool { return ListMagicInfo(f, exception) }
+
+var ListModuleInfo func(f *FILE, exception *ExceptionInfo) bool
+
+func (f *FILE) ModuleInfo(exception *ExceptionInfo) bool { return ListModuleInfo(f, exception) }
+
+var ListTypeInfo func(f *FILE, exception *ExceptionInfo) bool
+
+func (f *FILE) TypeInfo(exception *ExceptionInfo) bool { return ListTypeInfo(f, exception) }
+
+var LocaleCompare func(p, q string) SSize
+var LocaleLower func(str string)
+var LocaleNCompare func(p, q string, length uint32) SSize
+var LocaleUpper func(str string)
+var LockSemaphoreInfo func(s *SemaphoreInfo) bool
+
+func (s *SemaphoreInfo) Lock() bool { return LockSemaphoreInfo(s) }
+
+var LogMagickEvent func(type_ LogEventType, module, function string, line Size, format string, va ...VArg) bool
+var LogMagickEventList func(type_ LogEventType, module, function string, line Size, format string, operands VAList) bool
+var MSBOrderLong func(buffer *byte, length uint32)
+var MSBOrderShort func(p *byte, length uint32)
+var MagickArraySize func(count, size uint32) uint32
+var MagickBitStreamInitializeRead func(bitStream *BitStreamReadHandle, bytes *byte)
+var MagickBitStreamInitializeWrite func(bitStream *BitStreamWriteHandle, bytes *byte)
+var MagickBitStreamMSBRead func(bitStream *BitStreamReadHandle, requestedBits uint) uint
+var MagickBitStreamMSBWrite func(bitStream *BitStreamWriteHandle, requestedBits, quantum uint)
+var MagickCommand func(i *ImageInfo, argc int, argv, metadata []string, exception *ExceptionInfo) uint
+
+func (i *ImageInfo) MagickCommand(argc int, argv, metadata []string, exception *ExceptionInfo) uint {
+	return MagickCommand(i, argc, argv, metadata, exception)
+}
+
+var MagickCompositeImageUnderColor func(i *Image, undercolor *PixelPacket, exception *ExceptionInfo) bool
+
+func (i *Image) CompositeUnderColor(undercolor *PixelPacket, exception *ExceptionInfo) bool {
+	return MagickCompositeImageUnderColor(i, undercolor, exception)
+}
+
+var MagickConstrainColormapIndex func(i *Image, index uint) uint
+
+func (i *Image) ConstrainColormapIndex(index uint) uint {
+	return MagickConstrainColormapIndex(i, index)
+}
+
+var MagickCreateDirectoryPath func(dir string, exception *ExceptionInfo) bool
+var MagickFindRawImageMinMax func(i *Image, endian EndianType, width, height Size, type_ StorageType, scanlineOctets uint, scanlineBuffer *Void, min, max *float64) bool
+
+func (i *Image) FindRawMinMax(endian EndianType, width, height Size, type_ StorageType, scanlineOctets uint, scanlineBuffer *Void, min, max *float64) bool {
+	return MagickFindRawImageMinMax(i, endian, width, height, type_, scanlineOctets, scanlineBuffer, min, max)
+}
+
+var MagickGetBitRevTable func(int) *byte
+var MagickGetMMUPageSize func() SSize
+var MagickGetQuantumSamplesPerPixel func(quantumType QuantumType) uint
+var MagickMapAccessEntry func(map_ *MagickMap, key string, objectSize *uint32) *Void
+var MagickMapAddEntry func(map_ *MagickMap, key string, object *Void, objectSize uint32, exception *ExceptionInfo) uint
+var MagickMapAllocateIterator func(map_ *MagickMap) *MagickMapIterator
+var MagickMapAllocateMap func(clone MagickMapObjectClone, deallocate MagickMapObjectDeallocator) *MagickMap
+var MagickMapClearMap func(map_ *MagickMap)
+var MagickMapCloneMap func(map_ *MagickMap, exception *ExceptionInfo) MagickMap
+var MagickMapCopyBlob func(blob *Void, size uint32) *Void
+var MagickMapCopyString func(str *Void, size uint32) *Void
+var MagickMapDeallocateMap func(map_ *MagickMap)
+var MagickMapDeallocateBlob func(blob *Void)
+var MagickMapDeallocateIterator func(iterator *MagickMapIterator)
+var MagickMapDeallocateString func(str *Void)
+var MagickMapDereferenceIterator func(iterator *MagickMapIterator, objectSize *uint32) *Void
+var MagickMapIterateNext func(iterator *MagickMapIterator, key []string) uint
+var MagickMapIteratePrevious func(iterator *MagickMapIterator, key []string) uint
+var MagickMapIterateToBack func(iterator *MagickMapIterator)
+var MagickMapIterateToFront func(iterator *MagickMapIterator)
+var MagickMapRemoveEntry func(map_ *MagickMap, key string) uint
+var MagickRandNewSeed func() uint
+var MagickRandReentrant func(seed *uint) int
+var MagickRandomInteger func() uint32
+var MagickRandomReal func() float64
+var MagickReverseBits func(cp *byte, n uint32)
+var MagickSceneFileName func(filename, filenameTemplate, sceneTemplate string, force bool, scene Size) bool
+var MagickSizeStrToInt64 func(str string, kilo uint) int64
+var MagickSpawnVP func(verbose uint, file string, argv []string) int
+var MagickStrlCat func(dst string, src string, size uint32) uint32
+var MagickStrlCpy func(dst string, src string, size uint32) uint32
+var MagickStrlCpyTrunc func(dst string, src string, size uint32) uint32
+var MagickSwabArrayOfDouble func(dp *float64, n uint32)
+var MagickSwabArrayOfFloat func(fp *float32, n uint32)
+var MagickSwabArrayOfUInt16 func(wp *uint16, n uint32)
+var MagickSwabArrayOfUInt32 func(lp *uint32, n uint32)
+var MagickSwabDouble func(dp *float64)
+var MagickSwabFloat func(fp *float32)
+var MagickSwabUInt16 func(wp *uint16)
+var MagickSwabUInt32 func(lp *uint32)
+var MagickTsdGetSpecific func(key MagickTsdKey) *Void
+var MagickTsdKeyCreate func(key *MagickTsdKey) bool
+var MagickTsdKeyCreate2 func(key *MagickTsdKey, destructor MagickFreeFunc) bool
+var MagickTsdKeyDelete func(key MagickTsdKey) bool
+var MagickTsdSetSpecific func(key MagickTsdKey, value *Void) bool
+var MagickWordStreamInitializeRead func(wordStream *WordStreamReadHandle, readFunc WordStreamReadFunc, readFuncState *Void)
+var MagickWordStreamInitializeWrite func(wordStream *WordStreamWriteHandle, writeFunc WordStreamWriteFunc, writeFuncState *Void)
+var MagickWordStreamLSBRead func(wordStream *WordStreamReadHandle, requestedBits uint) uint
+var MagickWordStreamLSBWrite func(wordStream *WordStreamWriteHandle, requestedBits uint, quantum uint)
+var MagickWordStreamLSBWriteFlush func(wordStream *WordStreamWriteHandle)
+var MapBlob func(file int, mode MapMode, offset int64, length uint32) *byte
+var MapModeToString func(mapMode MapMode) string
+var MetricTypeToString func(metric MetricType) string
+var Modulate func(float64, float64, float64, *Quantum, *Quantum, *Quantum)
+var MogrifyImage func(*ImageInfo, int, []string, **Image, *ExceptionInfo) uint
+
+func (i *ImageInfo) MogrifyImage(a2 int, a3 []string, a4 **Image, a5 *ExceptionInfo) uint {
+	return MogrifyImage(i, a2, a3, a4, a5)
+}
+
+var MogrifyImageCommand func(i *ImageInfo, argc int, argv, metadata []string, exception *ExceptionInfo) uint
+
+func (i *ImageInfo) MogrifyImageCommand(argc int, argv, metadata []string, exception *ExceptionInfo) uint {
+	return MogrifyImageCommand(i, argc, argv, metadata, exception)
+}
+
+var MogrifyImages func(*ImageInfo, int, []string, **Image) uint
+
+func (i *ImageInfo) MogrifyImages(a2 int, a3 []string, a4 **Image) uint {
+	return MogrifyImages(i, a2, a3, a4)
+}
+
+var MontageImageCommand func(i *ImageInfo, argc int, argv, metadata []string, exception *ExceptionInfo) uint
+
+func (i *ImageInfo) MontageImageCommand(argc int, argv, metadata []string, exception *ExceptionInfo) uint {
+	return MontageImageCommand(i, argc, argv, metadata, exception)
+}
+
+var MultilineCensus func(label string) Size
+var NTElapsedTime func() float64
+var NTErrorHandler func(ExceptionType, string, string)
+var NTGetExecutionPath func(path *Char) bool
+var NTGetLastError func() string
+var NTGetTypeList func() *TypeInfo
+var NTGhostscriptDLL func(path *Char, pathLength int) int
+var NTGhostscriptDLLVectors func() *GhostscriptVectors
+var NTGhostscriptEXE func(string, int) int
+var NTGhostscriptFonts func(string, int) int
+var NTGhostscriptLoadDLL func() int
+var NTGhostscriptUnLoadDLL func() int
+var NTIsMagickConflict func(string) bool
+var NTKernelAPISupported func(name string) bool
+var NTRegistryKeyLookup func(string) string
+var NTResourceToBlob func(string) *byte
+var NTSystemCommand func(string) int
+var NTUserTime func() float64
+var NTWarningHandler func(ExceptionType, string, string) ***Void //*** Return?
+var NTclosedir func(*DIR) int
+var NTdlclose func(handle *Void) int
+var NTdlerror func() string
+var NTdlexit func() int
+var NTdlinit func() int
+var NTdlopen func(filename string) *Void
+var NTdlsetsearchpath func(string) int
+var NTdlsym func(handle *Void, name string) *Void
+var NTftruncate func(filedes int, length int64) int
+var NTmmap func(address string, length uint32, protection int, access int, file int, offset int64) *Void
+var NTmsync func(addr *Void, len uint32, flags int) int
+var NTmunmap func(addr *Void, len uint32) int
+var NTopendir func(string) *DIR
+var NTreaddir func(*DIR) *dirent
+var NTseekdir func(*DIR, SSize)
+var NTtelldir func(*DIR) SSize
+var NextImageProfile func(profileIterator ImageProfileIterator, name *string, profile **byte, length *uint32) bool
+var NoiseTypeToString func(noiseType NoiseType) string
+var OpenBlob func(i *ImageInfo, image *Image, mode BlobMode, exception *ExceptionInfo) bool
+
+func (i *ImageInfo) OpenBlob(image *Image, mode BlobMode, exception *ExceptionInfo) bool {
+	return OpenBlob(i, image, mode, exception)
+}
+
+var OpenModule func(module string, exception *ExceptionInfo) bool
+var OpenModules func(exception *ExceptionInfo) bool
+var OrientationTypeToString func(orientationType OrientationType) string
+var PackbitsEncode2Image func(i *Image, length uint32, pixels *byte, writeByte WriteByteHook, info *Void) bool
+
+func (i *Image) PackbitsEncode2(length uint32, pixels *byte, writeByte WriteByteHook, info *Void) bool {
+	return PackbitsEncode2Image(i, length, pixels, writeByte, info)
+}
+
+var PackbitsEncodeImage func(i *Image, length uint32, pixels *byte) bool
+
+func (i *Image) PackbitsEncode(length uint32, pixels *byte) bool {
+	return PackbitsEncodeImage(i, length, pixels)
+}
+
+var PersistCache func(i *Image, filename string, attach bool, offset *int64, exception *ExceptionInfo) bool
+var PopImagePixels func(i *Image, quantum QuantumType, destination *byte) bool
+
+func (i *Image) PopPixels(quantum QuantumType, destination *byte) bool {
+	return PopImagePixels(i, quantum, destination)
+}
+
+var PurgeTemporaryFiles func()
+var PushImagePixels func(i *Image, quantum QuantumType, source *byte) bool
+
+func (i *Image) PushPixels(quantum QuantumType, source *byte) bool {
+	return PushImagePixels(i, quantum, source)
+}
+
+var QuantumOperatorImageMultivalue func(i *Image, quantumOperator QuantumOperator, values string) bool
+
+func (i *Image) QuantumOperatorMultivalue(quantumOperator QuantumOperator, values string) bool {
+	return QuantumOperatorImageMultivalue(i, quantumOperator, values)
+}
+
+var QuantumOperatorToString func(quantumOperator QuantumOperator) string
+var QuantumSampleTypeToString func(sampleType QuantumSampleType) string
+var QuantumTypeToString func(quantumType QuantumType) string
+var QueryColorDatabase func(name string, color *PixelPacket, exception *ExceptionInfo) bool
+var QueryColorname func(i *Image, color *PixelPacket, compliance ComplianceType, name string, exception *ExceptionInfo) bool
+
+func (i *Image) QueryColorname(color *PixelPacket, compliance ComplianceType, name string, exception *ExceptionInfo) bool {
+	return QueryColorname(i, color, compliance, name, exception)
+}
+
+var RGBTransformImage func(i *Image, colorspace ColorspaceType) bool
+
+func (i *Image) RGBTransform(colorspace ColorspaceType) bool {
+	return RGBTransformImage(i, colorspace)
+}
+
+var ReacquireMemory func(memory **Void, size uint32)
+var ReadBlob func(i *Image, length uint32, data *byte) int32
+
+func (i *Image) ReadBlob(length uint32, data *byte) int32 { return ReadBlob(i, length, data) }
+
+var ReadBlobByte func(i *Image) int
+
+func (i *Image) ReadBlobByte() int { return ReadBlobByte(i) }
+
+var ReadBlobLSBDouble func(i *Image) float64
+
+func (i *Image) ReadBlobLSBDouble() float64 { return ReadBlobLSBDouble(i) }
+
+var ReadBlobLSBDoubles func(i *Image, octets uint32, data *float64) uint32
+
+func (i *Image) ReadBlobLSBDoubles(octets uint32, data *float64) uint32 {
+	return ReadBlobLSBDoubles(i, octets, data)
+}
+
+var ReadBlobLSBFloat func(i *Image) float32
+
+func (i *Image) ReadBlobLSBFloat() float32 { return ReadBlobLSBFloat(i) }
+
+var ReadBlobLSBFloats func(i *Image, octets uint32, data *float32) uint32
+
+func (i *Image) ReadBlobLSBFloats(octets uint32, data *float32) uint32 {
+	return ReadBlobLSBFloats(i, octets, data)
+}
+
+var ReadBlobLSBLong func(i *Image) uint32
+
+func (i *Image) ReadBlobLSBLong() uint32 { return ReadBlobLSBLong(i) }
+
+var ReadBlobLSBLongs func(i *Image, octets uint32, data *uint32) uint32
+
+func (i *Image) ReadBlobLSBLongs(octets uint32, data *uint32) uint32 {
+	return ReadBlobLSBLongs(i, octets, data)
+}
+
+var ReadBlobLSBShort func(i *Image) uint16
+
+func (i *Image) ReadBlobLSBShort() uint16 { return ReadBlobLSBShort(i) }
+
+var ReadBlobLSBShorts func(i *Image, octets uint32, data *uint16) uint32
+
+func (i *Image) ReadBlobLSBShorts(octets uint32, data *uint16) uint32 {
+	return ReadBlobLSBShorts(i, octets, data)
+}
+
+var ReadBlobMSBDouble func(i *Image) float64
+
+func (i *Image) ReadBlobMSBDouble() float64 { return ReadBlobMSBDouble(i) }
+
+var ReadBlobMSBDoubles func(i *Image, octets uint32, data *float64) uint32
+
+func (i *Image) ReadBlobMSBDoubles(octets uint32, data *float64) uint32 {
+	return ReadBlobMSBDoubles(i, octets, data)
+}
+
+var ReadBlobMSBFloat func(i *Image) float32
+
+func (i *Image) ReadBlobMSBFloat() float32 { return ReadBlobMSBFloat(i) }
+
+var ReadBlobMSBFloats func(i *Image, octets uint32, data *float32) uint32
+
+func (i *Image) ReadBlobMSBFloats(octets uint32, data *float32) uint32 {
+	return ReadBlobMSBFloats(i, octets, data)
+}
+
+var ReadBlobMSBLong func(i *Image) uint32
+
+func (i *Image) ReadBlobMSBLong() uint32 { return ReadBlobMSBLong(i) }
+
+var ReadBlobMSBLongs func(i *Image, octets uint32, data *uint32) uint32
+
+func (i *Image) ReadBlobMSBLongs(octets uint32, data *uint32) uint32 {
+	return ReadBlobMSBLongs(i, octets, data)
+}
+
+var ReadBlobMSBShort func(i *Image) uint16
+
+func (i *Image) ReadBlobMSBShort() uint16 { return ReadBlobMSBShort(i) }
+
+var ReadBlobMSBShorts func(i *Image, octets uint32, data *uint16) uint32
+
+func (i *Image) ReadBlobMSBShorts(octets uint32, data *uint16) uint32 {
+	return ReadBlobMSBShorts(i, octets, data)
+}
+
+var ReadBlobString func(i *Image, str string) string
+
+func (i *Image) ReadBlobString(str string) string { return ReadBlobString(i, str) }
+
+var ReadBlobZC func(i *Image, length uint32, data **Void) uint32
+
+func (i *Image) ReadBlobZC(length uint32, data **Void) uint32 { return ReadBlobZC(i, length, data) }
+
+var RegisterStaticModules func()
+var ResetTimer func(t *TimerInfo)
+
+func (t *TimerInfo) Reset() { ResetTimer(t) }
+
+var ResizeFilterToString func(filter FilterTypes) string
+var SeekBlob func(i *Image, offset int64, whence int) int64
+
+func (i *Image) SeekBlob(offset int64, whence int) int64 {
+	return SeekBlob(i, offset, whence)
+}
+
+var SetCacheView func(c *ViewInfo, x, y SSize, columns, rows Size) *PixelPacket
+
+func (c *ViewInfo) Set(x, y SSize, columns, rows Size) *PixelPacket {
+	return SetCacheView(c, x, y, columns, rows)
+}
+
+var SetClientFilename func(string) string
+var SetClientName func(name string) string
+var SetClientPath func(path string) string
+var SetDelegateInfo func(*DelegateInfo) *DelegateInfo
+var SetGeometry func(i *Image, geometry *RectangleInfo)
+
+func (i *Image) SetGeometry(geometry *RectangleInfo) { SetGeometry(i, geometry) }
+
+var SetImageInfo func(i *ImageInfo, rectify bool, exception *ExceptionInfo) bool
+
+func (i *ImageInfo) SetImageInfo(rectify bool, exception *ExceptionInfo) bool {
+	return SetImageInfo(i, rectify, exception)
+}
+
+var SetLogEventMask func(events string) LogEventType
+var SetLogFormat func(format string)
+var SortColormapByIntensity func(i *Image) bool
+
+func (i *Image) SortColormapByIntensity() bool { return SortColormapByIntensity(i) }
+
+var StorageTypeToString func(storageType StorageType) string
+var StretchTypeToString func(stretch StretchType) string
+var StringToArgv func(text string, argc *int) []string
+var StringToChannelType func(option string) ChannelType
+var StringToColorspaceType func(colorspaceString string) ColorspaceType
+var StringToCompositeOperator func(option string) CompositeOperator
+var StringToCompressionType func(option string) CompressionType
+var StringToDouble func(*string, float64) float64
+var StringToEndianType func(option string) EndianType
+var StringToFilterTypes func(option string) FilterTypes
+var StringToGravityType func(option string) GravityType
+var StringToHighlightStyle func(option string) HighlightStyle
+var StringToImageType func(option string) ImageType
+var StringToInterlaceType func(option string) InterlaceType
+var StringToList func(text string) []string
+var StringToMetricType func(option string) MetricType
+var StringToNoiseType func(option string) NoiseType
+var StringToOrientationType func(option string) OrientationType
+var StringToPreviewType func(option string) PreviewType
+var StringToQuantumOperator func(option string) QuantumOperator
+var StringToResourceType func(option string) ResourceType
+var StringToVirtualPixelMethod func(option string) VirtualPixelMethod
+var Strip func(message string)
+var StyleTypeToString func(style StyleType) string
+var SubstituteString func(buffer []string, search, replace string) bool
+var SyncCacheView func(c *ViewInfo) bool
+
+func (c *ViewInfo) Sync() bool { return SyncCacheView(c) }
+
+var SyncImage func(i *Image) bool
+
+func (i *Image) Sync() bool { return SyncImage(i) }
+
+var SyncNextImageInList func(images *Image) *Image
+var SystemCommand func(verbose bool, command string) int
+var TellBlob func(i *Image) int64
+
+func (i *Image) TellBlob() int64 { return TellBlob(i) }
+
+var TimeImageCommand func(i *ImageInfo, argc int, argv, metadata []string, exception *ExceptionInfo) uint
+
+func (i *ImageInfo) TimeImageCommand(argc int, argv, metadata []string, exception *ExceptionInfo) uint {
+	return TimeImageCommand(i, argc, argv, metadata, exception)
+}
+
+var Tokenizer func(t *TokenInfo, flag uint, token string, maxTokenLength uint32, line, white, breakSet, quote string, escape int8, breaker string, next *int, quoted string) int
+
+func (t *TokenInfo) Tokenizer(flag uint, token string, maxTokenLength uint32, line, white, breakSet, quote string, escape int8, breaker string, next *int, quoted string) int {
+	return Tokenizer(t, flag, token, maxTokenLength, line, white, breakSet, quote, escape, breaker, next, quoted)
+}
+
+var TransformColorspace func(i *Image, colorspace ColorspaceType) uint
+
+func (i *Image) TransformColorspace(colorspace ColorspaceType) uint {
+	return TransformColorspace(i, colorspace)
+}
+
+var TransformHSL func(red, green, blue Quantum, hue, saturation, lightness *float64)
+var TransformHWB func(Quantum, Quantum, Quantum, *float64, *float64, *float64)
+var TransformRGBImage func(i *Image, colorspace ColorspaceType) bool
+
+func (i *Image) TransformRGB(colorspace ColorspaceType) bool {
+	return TransformRGBImage(i, colorspace)
+}
+
+var TranslateText func(i *ImageInfo, image *Image, embedText string) string
+
+func (i *ImageInfo) TranslateText(image *Image, embedText string) string {
+	return TranslateText(i, image, embedText)
+}
+
+var TranslateTextEx func(*ImageInfo, *Image, string, MagickTextTranslate) string
+
+func (i *ImageInfo) TranslateTextEx(a2 *Image, a3 string, a4 MagickTextTranslate) string {
+	return TranslateTextEx(i, a2, a3, a4)
+}
+
+var UnlockSemaphoreInfo func(s *SemaphoreInfo) bool
+
+func (s *SemaphoreInfo) Unlock() bool { return UnlockSemaphoreInfo(s) }
+
+var UnmapBlob func(map_ *Void, length uint32) bool
+var UnregisterStaticModules func()
+var WriteBlob func(i *Image, length uint32, data *byte) int32
+
+func (i *Image) WriteBlob(length uint32, data *byte) int32 { return WriteBlob(i, length, data) }
+
+var WriteBlobByte func(i *Image, value byte) int32
+
+func (i *Image) WriteBlobByte(value byte) int32 { return WriteBlobByte(i, value) }
+
+var WriteBlobFile func(i *Image, filename string) bool
+
+func (i *Image) WriteBlobFile(filename string) bool { return WriteBlobFile(i, filename) }
+
+var WriteBlobLSBLong func(i *Image, value uint32) int32
+
+func (i *Image) WriteBlobLSBLong(value uint32) int32 { return WriteBlobLSBLong(i, value) }
+
+var WriteBlobLSBShort func(i *Image, value uint16) int32
+
+func (i *Image) WriteBlobLSBShort(value uint16) int32 { return WriteBlobLSBShort(i, value) }
+
+var WriteBlobMSBLong func(i *Image, value uint32) int32
+
+func (i *Image) WriteBlobMSBLong(value uint32) int32 { return WriteBlobMSBLong(i, value) }
+
+var WriteBlobMSBShort func(i *Image, value uint16) int32
+
+func (i *Image) WriteBlobMSBShort(value uint16) int32 { return WriteBlobMSBShort(i, value) }
+
+var WriteBlobString func(i *Image, str string) int32
+
+func (i *Image) WriteBlobString(str string) int32 { return WriteBlobString(i, str) }
+
+var ZoomImage func(i *Image, columns, rows Size, exception *ExceptionInfo) *Image
+
+func (i *Image) Zoom(columns, rows Size, exception *ExceptionInfo) *Image {
+	return ZoomImage(i, columns, rows, exception)
+}
+
+var GmConvertFp16toFp32 func(fp16 *fp16bits, fp32 *float32) int
+var GmConvertFp24toFp32 func(fp24 *fp24bits, fp32 *float32, mode int) int
+var GmConvertFp32toFp16 func(fp32 *float32, fp16 *fp16bits, mode int) int
+var GmConvertFp32toFp24 func(fp32 *float32, fp24 *fp24bits, mode int) int
